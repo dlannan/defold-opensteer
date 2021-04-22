@@ -133,7 +133,7 @@ function SteerLibrary( mover )
         -- // the path tube and (b) we are facing in the correct direction
         if ((res.outside < 0.0) and (rightway == true)) then 
             -- // all is well, return zero steering
-            return Vec3.zero
+            return Vec3_zero
         else 
             -- // otherwise we need to steer towards a target point obtained
             -- // by adding pathDistanceOffset to our current path position
@@ -160,7 +160,7 @@ function SteerLibrary( mover )
         if (res.outside < 0.0) then
             -- // our predicted future position was in the path,
             -- // return zero steering.
-            return Vec3.zero
+            return Vec3_zero
         else 
             -- // our predicted future position was outside the path, need to
             -- // steer towards it.  Use onPath projection of futurePosition
@@ -238,8 +238,8 @@ function SteerLibrary( mover )
     mover.steerToAvoidNeighbors = function( minTimeToCollision, others) 
 
         -- // first priority is to prevent immediate interpenetration
-        local separation = self.steerToAvoidCloseNeighbors(0.0, others)
-        if (separation.neq(Vec3.zero)) then return separation end
+        local separation = mover.steerToAvoidCloseNeighbors(0.0, others)
+        if (separation.neq(Vec3_zero)) then return separation end
 
         -- // otherwise, go on to consider potential future collisions
         local steer = 0
@@ -256,9 +256,9 @@ function SteerLibrary( mover )
 
         -- // for each of the other vehicles, determine which (if any)
         -- // pose the most immediate threat of collision.
-        for i = 0, others.length-1 do
+        for k,v in pairs(others) do
             
-            local other = others[i]
+            local other = v
             if(other.mover ~= mover) then
                 -- // avoid when future positions are this close (or less)
                 local collisionDangerThreshold = mover.radius() * 2
@@ -363,7 +363,7 @@ function SteerLibrary( mover )
         mover.ourPositionAtNearestApproach = myFinal
         mover.hisPositionAtNearestApproach = otherFinal
     
-        return Vec3.distance(myFinal, otherFinal)
+        return Vec3_distance(myFinal, otherFinal)
     end
 
     -- /// XXX globals only for the sake of graphical annotation
@@ -379,8 +379,8 @@ function SteerLibrary( mover )
 
     mover.steerToAvoidCloseNeighbors = function( minSeparationDistance, others)
         -- // for each of the other vehicles...
-        for i = 0, others.length-1 do
-            local other = others[i]
+        for k,v in pairs(others) do
+            local other = v
             if (other.mover ~= mover)  then
                 local sumOfRadii = mover.radius() + other.mover.radius()
                 local minCenterToCenter = minSeparationDistance + sumOfRadii
@@ -394,7 +394,7 @@ function SteerLibrary( mover )
         end
 
         -- // otherwise return zero
-        return Vec3.zero
+        return Vec3_zero
     end
 
 

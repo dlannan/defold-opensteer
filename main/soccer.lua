@@ -51,10 +51,30 @@ local selectedVehicle
 local soccer
 local context
 
-local zscale = 2.35
-local xscale = 2.85
+local zscale = 1.76
+local xscale = 2.17
 local checkRadius = 30.0
-local MAX_TEAM     = 9
+local MAX_TEAM     = 8
+
+local     ballobj
+
+local     m_PlayerCountA = 0
+local     m_PlayerCountB = 0
+local     TeamA = {}
+local     TeamB = {}
+local     m_AllPlayers = {}
+
+local     m_Ball        = nil
+local     m_bbox        = nil 
+local     m_TeamAGoal   = nil 
+local     m_TeamBGoal   = nil
+local    junk
+local     m_redScore    = 0
+local     m_blueScore   = 0
+
+local centerx     = 0
+local centery     = 0
+local scale       = 1
 
 local playerPosition = {
     Vec3Set(0,0,4),
@@ -65,7 +85,6 @@ local playerPosition = {
     Vec3Set(-8,0, 15),
     Vec3Set(0,0,15),
     Vec3Set(8,0,15),
-    Vec3Set(0,0,4),
 
     Vec3Set(0,0,-4),
     Vec3Set(-5,0,-7),
@@ -75,7 +94,6 @@ local playerPosition = {
     Vec3Set(-8,0, -15),
     Vec3Set(0,0,-15),
     Vec3Set(8,0,-15),
-    Vec3Set(0,0,-4)
 }
 
 
@@ -119,8 +137,6 @@ local Ball = function(bbox)
     self.m_bbox = bbox
     self.mover = SimpleVehicle()
 
-    pprint( bbox)
-
     self.customData = {}
 
     -- // reset state
@@ -129,7 +145,7 @@ local Ball = function(bbox)
         self.mover.reset () -- // reset the vehicle 
         self.mover.setSpeed(0.0)         -- // speed along Forward direction.
         self.mover.setMaxForce(30.0)      -- // steering force is clipped to this magnitude
-        self.mover.setMaxSpeed(30.0)         -- // velocity is clipped to this magnitude
+        self.mover.setMaxSpeed(70.0)         -- // velocity is clipped to this magnitude
         self.mover.setRadius(1.2)
 
         self.mover.setPosition(Vec3Set(0.0, 0.0, 0.0))
@@ -159,10 +175,12 @@ local Ball = function(bbox)
         if(m_TeamAGoal.InsideZ(m_Ball.mover.position()) and m_TeamAGoal.InsideX(m_Ball.mover.position())) then
             m_Ball.reset()	-- // Ball in blue teams goal, red scores
             m_blueScore = m_blueScore + 1
+            label.set_text("#sc_wild", "WILD: "..m_blueScore)
         end
         if(m_TeamBGoal.InsideZ(m_Ball.mover.position()) and m_TeamBGoal.InsideX(m_Ball.mover.position())) then
             m_Ball.reset()	-- // Ball in red teams goal, blue scores
             m_redScore = m_redScore + 1
+            label.set_text("#sc_farm", "FARM: "..m_redScore)
         end
 
         self.distance = self.distance + Vec3_distance( self.lastpos, self.mover.position() )
@@ -204,8 +222,7 @@ local Player = function( others, allplayers, ball, isTeamA, id)
         local Xpos = -frandom01()*20
         if (self.b_ImTeamA == true) then Xpos = frandom01()*20  end
         self.mover.setPosition( Vec3Set(Xpos, 0, (frandom01()-0.5)*20) )
-        print(self.m_MyID)
-        if(self.m_MyID < 9) then 
+        if(self.m_MyID <= 9) then 
             if(self.b_ImTeamA == true) then 
                 self.mover.setPosition(playerPosition[self.m_MyID])
             else
@@ -221,7 +238,7 @@ local Player = function( others, allplayers, ball, isTeamA, id)
     self.update = function( currentTime, elapsedTime) 
 
         -- // if I hit the ball, kick it.
-        local distToBall = Vec3.distance (self.mover.position(), self.m_Ball.mover.position())
+        local distToBall = Vec3_distance (self.mover.position(), self.m_Ball.mover.position())
         local sumOfRadii = self.mover.radius() + self.m_Ball.mover.radius()
         if(distToBall < sumOfRadii) then
             self.m_Ball.kick((self.m_Ball.mover.position().sub(self.mover.position())).mult(10.0), elapsedTime)
@@ -232,7 +249,7 @@ local Player = function( others, allplayers, ball, isTeamA, id)
         if(collisionAvoidance.neq(Vec3_zero)) then
             self.mover.applySteeringForce (collisionAvoidance, elapsedTime)
         else 
-            local distHomeToBall = Vec3.distance (self.m_home, self.m_Ball.mover.position())
+            local distHomeToBall = Vec3_distance (self.m_home, self.m_Ball.mover.position())
             if( distHomeToBall < checkRadius) then
                 
                 -- // go for ball if I'm on the 'right' side of the ball
@@ -276,29 +293,16 @@ end
 
 
 -- // ----------------------------------------------------------------------------
-
-local     ballobj
-
-local     m_PlayerCountA = 0
-local     m_PlayerCountB = 0
-local     TeamA = {}
-local     TeamB = {}
-local     m_AllPlayers = {}
-
-m_Ball        = nil
-m_bbox        = nil 
-m_TeamAGoal   = nil 
-m_TeamBGoal   = nil
-local    junk
-local    m_redScore
-local    m_blueScore
-
 -- // TODO: This should be a helper!!! Move it!!!
 function setBodyMaterial( obj, newmaterial )    
 end
 
-function soccerSetup() 
+function soccerSetup(gwidth, gheight) 
 
+    centerx     = gwidth * 0.5 
+    centery     = gheight * 0.5 
+    scale       = gheight / 100.0  
+    
     -- // Make a field
     m_bbox = AABBox(ScaleVector(Vec3Set(-10,0,-20)), ScaleVector(Vec3Set(10,0,20)))
     -- // Red goal
@@ -310,21 +314,28 @@ function soccerSetup()
     m_Ball['node'] = ballobj
 
     -- // Build team A
-    m_PlayerCountA = 7
+    m_PlayerCountA = 8
 
+    local s = vmath.vector3(0.4, 0.4, 1.0)
+    go.set_scale(s, "ball")
+        
     for i = 1, m_PlayerCountA do
-        local pMicTest = new Player(TeamA, m_AllPlayers, m_Ball, true, i)
+        local pMicTest = Player(TeamA, m_AllPlayers, m_Ball, true, i)
         selectedVehicle = pMicTest
         tinsert(TeamA, pMicTest)
         tinsert(m_AllPlayers,pMicTest)
+        local s = vmath.vector3(0.2, 0.2, 1.0)
+        go.set_scale(s, "player"..i)
     end
     -- // Build Team B
-    m_PlayerCountB = 7
+    m_PlayerCountB = 8
     for i=1, m_PlayerCountB do 
-        local pMicTest = new Player(TeamB, m_AllPlayers, m_Ball, false, i)
+        local pMicTest = Player(TeamB, m_AllPlayers, m_Ball, false, i)
         selectedVehicle = pMicTest
         tinsert(TeamB,pMicTest)
         tinsert(m_AllPlayers,pMicTest)
+        local s = vmath.vector3(0.2, 0.2, 1.0)
+        go.set_scale(s, "player"..i+9)
     end
     -- // initialize camera
     m_redScore = 0
@@ -332,28 +343,25 @@ function soccerSetup()
 end
 
 function soccerClose() 
-    for i=1, m_PlayerCountA do
-        models.remove(TeamA[i].node)
-        TeamA[i] = nil
+    for k,v in pairs(TeamA) do
+        v = nil
     end
     TeamA = {}
-    for i=1, m_PlayerCountB do
-        models.remove(TeamB[i].node)
-        TeamB[i] = nil
+    for k,v in pairs(TeamB) do
+        v = nil
     end
     TeamB = {}
-    models.remove(m_Ball.node)
     m_AllPlayers = {}
 end
 
 function soccerReset() 
 
     -- // reset vehicle
-    for i=1, m_PlayerCountA do
-        TeamA[i].reset ()
+    for k,v in pairs(TeamA) do
+        v.reset ()
     end 
-    for i=1, m_PlayerCountB do
-        TeamB[i].reset ()
+    for k,v in pairs(TeamB) do
+        v.reset ()
     end
     m_Ball.reset()
 
@@ -378,15 +386,21 @@ function soccerUpdater( dt )
     currentTime = currentTime + dt 
     elapsedTime = dt
 
+    local offset     = vmath.vector3(centerx, centery, 0)
+
     -- // update simulation of test vehicle
     for k,v in pairs(TeamA) do
         v.update (currentTime, elapsedTime)
+        local pos = v.mover._lastPosition
+        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * scale + offset, "player"..k)
     end 
     for k,v in pairs(TeamB) do 
         v.update (currentTime, elapsedTime)
+        local pos = v.mover._lastPosition
+        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * scale + offset, "player"..k+9)
     end 
     m_Ball.update(currentTime, elapsedTime)
 
     local pos = m_Ball.mover._lastPosition
-    pprint(pos.x,pos.y,pos.z)
+    go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * scale + offset, "ball")
 end
