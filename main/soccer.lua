@@ -47,36 +47,44 @@ local tinsert = table.insert
 local Vec3 = require("opensteer.os-vec")
 local SimpleVehicle = require("opensteer.os-simplevehicle")
 
-local selectedVehicle
-local soccer
-local context
+-- // ----------------------------------------------------------------------------
+local MAX_TEAM       = 8
+local soccerGame     = {}
 
-local zscale = 1.76
-local xscale = 2.17
-local checkRadius = 30.0
-local MAX_TEAM     = 8
+soccerGame.selectedVehicle     = 0
+soccerGame.oldTime             = 0
+soccerGame.currentTime         = 0
+soccerGame.elapsedTime         = 0
 
-local     ballobj
+soccerGame.selectedVehicle    = nil 
+soccerGame.soccer             = nil
+soccerGame.context            = nil
 
-local     m_PlayerCountA = 0
-local     m_PlayerCountB = 0
-local     TeamA = {}
-local     TeamB = {}
-local     m_AllPlayers = {}
+soccerGame.zscale = 1.76
+soccerGame.xscale = 2.17
+soccerGame.checkRadius = 30.0
 
-local     m_Ball        = nil
-local     m_bbox        = nil 
-local     m_TeamAGoal   = nil 
-local     m_TeamBGoal   = nil
-local    junk
-local     m_redScore    = 0
-local     m_blueScore   = 0
+soccerGame.ballobj    = nil
 
-local centerx     = 0
-local centery     = 0
-local scale       = 1
+soccerGame.m_PlayerCountA = 8
+soccerGame.m_PlayerCountB = 8
+soccerGame.TeamA = {}
+soccerGame.TeamB = {}
+soccerGame.m_AllPlayers = {}
 
-local playerPosition = {
+soccerGame.m_Ball        = nil
+soccerGame.m_bbox        = nil 
+soccerGame.m_TeamAGoal   = nil 
+soccerGame.m_TeamBGoal   = nil
+soccerGame.junk          = nil
+soccerGame.m_redScore    = 0
+soccerGame.m_blueScore   = 0
+
+soccerGame.centerx     = 0
+soccerGame.centery     = 0
+soccerGame.scale       = 1
+
+soccerGame.playerPosition = {
     Vec3Set(0,0,4),
     Vec3Set(-5,0,7),
     Vec3Set(5,0,7),
@@ -98,13 +106,13 @@ local playerPosition = {
 
 
 -- // Get the initial position of the vehicles and set them here
-local playerPositionStore = {}
+soccerGame.playerPositionStore = {}
 --local playerPosition = {}
 
 function ScaleVector( v ) 
 
-    v.x = v.x * xscale
-    v.z = v.z * zscale
+    v.x = v.x * soccerGame.xscale
+    v.z = v.z * soccerGame.zscale
     return v
 end
 
@@ -160,27 +168,27 @@ local Ball = function(bbox)
         self.mover.applyBrakingForce(3.5, elapsedTime)
         self.mover.applySteeringForce(self.mover.velocity(), elapsedTime)
         -- // are we now outside the field?
-        if(not m_bbox.InsideX(self.mover.position())) then
+        if(not soccerGame.m_bbox.InsideX(self.mover.position())) then
             local d = self.mover.velocity()
             self.mover.regenerateOrthonormalBasis(Vec3Set(-d.x, d.y, d.z))
             self.mover.applySteeringForce(self.mover.velocity(), elapsedTime)
         end
-        if(not m_bbox.InsideZ(self.mover.position())) then
+        if(not soccerGame.m_bbox.InsideZ(self.mover.position())) then
             local d = self.mover.velocity()
             self.mover.regenerateOrthonormalBasis(Vec3Set(d.x, d.y, -d.z))
             self.mover.applySteeringForce(self.mover.velocity(), elapsedTime)
         end
 
 
-        if(m_TeamAGoal.InsideZ(m_Ball.mover.position()) and m_TeamAGoal.InsideX(m_Ball.mover.position())) then
-            m_Ball.reset()	-- // Ball in blue teams goal, red scores
-            m_blueScore = m_blueScore + 1
-            label.set_text("#sc_wild", "WILD: "..m_blueScore)
+        if(soccerGame.m_TeamAGoal.InsideZ(soccerGame.m_Ball.mover.position()) and soccerGame.m_TeamAGoal.InsideX(soccerGame.m_Ball.mover.position())) then
+            soccerGame.m_Ball.reset()	-- // Ball in blue teams goal, red scores
+            soccerGame.m_blueScore = soccerGame.m_blueScore + 1
+            label.set_text("#sc_wild", "WILD: "..soccerGame.m_blueScore)
         end
-        if(m_TeamBGoal.InsideZ(m_Ball.mover.position()) and m_TeamBGoal.InsideX(m_Ball.mover.position())) then
-            m_Ball.reset()	-- // Ball in red teams goal, blue scores
-            m_redScore = m_redScore + 1
-            label.set_text("#sc_farm", "FARM: "..m_redScore)
+        if(soccerGame.m_TeamBGoal.InsideZ(soccerGame.m_Ball.mover.position()) and soccerGame.m_TeamBGoal.InsideX(soccerGame.m_Ball.mover.position())) then
+            soccerGame.m_Ball.reset()	-- // Ball in red teams goal, blue scores
+            soccerGame.m_redScore = soccerGame.m_redScore + 1
+            label.set_text("#sc_farm", "FARM: "..soccerGame.m_redScore)
         end
 
         self.distance = self.distance + Vec3_distance( self.lastpos, self.mover.position() )
@@ -224,9 +232,9 @@ local Player = function( others, allplayers, ball, isTeamA, id)
         self.mover.setPosition( Vec3Set(Xpos, 0, (frandom01()-0.5)*20) )
         if(self.m_MyID <= 9) then 
             if(self.b_ImTeamA == true) then 
-                self.mover.setPosition(playerPosition[self.m_MyID])
+                self.mover.setPosition(soccerGame.playerPosition[self.m_MyID])
             else
-                self.mover.setPosition(playerPosition[self.m_MyID+ MAX_TEAM])
+                self.mover.setPosition(soccerGame.playerPosition[self.m_MyID+ MAX_TEAM])
             end
         end
 
@@ -250,7 +258,7 @@ local Player = function( others, allplayers, ball, isTeamA, id)
             self.mover.applySteeringForce (collisionAvoidance, elapsedTime)
         else 
             local distHomeToBall = Vec3_distance (self.m_home, self.m_Ball.mover.position())
-            if( distHomeToBall < checkRadius) then
+            if( distHomeToBall < soccerGame.checkRadius) then
                 
                 -- // go for ball if I'm on the 'right' side of the ball
                 local testplayer = self.mover.position().z < self.m_Ball.mover.position().z
@@ -299,108 +307,104 @@ end
 
 function soccerSetup(gwidth, gheight) 
 
-    centerx     = gwidth * 0.5 
-    centery     = gheight * 0.5 
-    scale       = gheight / 100.0  
-    
+    gwidth = gwidth or 640 
+    gheight = gheight or 480 
+
+    soccerGame.centerx     = gwidth * 0.5 
+    soccerGame.centery     = gheight * 0.5 
+    soccerGame.scale       = gheight / 100.0  
+       
     -- // Make a field
-    m_bbox = AABBox(ScaleVector(Vec3Set(-10,0,-20)), ScaleVector(Vec3Set(10,0,20)))
+    soccerGame.m_bbox      = AABBox(ScaleVector(Vec3Set(-10,0,-20)), ScaleVector(Vec3Set(10,0,20)))
     -- // Red goal
-    m_TeamAGoal = AABBox(ScaleVector(Vec3Set(-2,0,-21)), ScaleVector(Vec3Set(2,0,-19)))
+    soccerGame.m_TeamAGoal = AABBox(ScaleVector(Vec3Set(-2,0,-21)), ScaleVector(Vec3Set(2,0,-19)))
     -- // Blue Goal
-    m_TeamBGoal = AABBox(ScaleVector(Vec3Set(-2,0,19)), ScaleVector(Vec3Set(2,0,21)))
+    soccerGame.m_TeamBGoal = AABBox(ScaleVector(Vec3Set(-2,0,19)), ScaleVector(Vec3Set(2,0,21)))
     -- // Make a ball
-    m_Ball = Ball(m_bbox)
-    m_Ball['node'] = ballobj
+    soccerGame.m_Ball      = Ball(soccerGame.m_bbox)
 
     -- // Build team A
-    m_PlayerCountA = 8
 
     local s = vmath.vector3(0.4, 0.4, 1.0)
     go.set_scale(s, "ball")
         
-    for i = 1, m_PlayerCountA do
-        local pMicTest = Player(TeamA, m_AllPlayers, m_Ball, true, i)
-        selectedVehicle = pMicTest
-        tinsert(TeamA, pMicTest)
-        tinsert(m_AllPlayers,pMicTest)
+    for i = 1, soccerGame.m_PlayerCountA do
+        local pMicTest = Player(soccerGame.TeamA, soccerGame.m_AllPlayers, soccerGame.m_Ball, true, i)
+        soccerGame.selectedVehicle = pMicTest
+        tinsert(soccerGame.TeamA, pMicTest)
+        tinsert(soccerGame.m_AllPlayers, pMicTest)
         local s = vmath.vector3(0.2, 0.2, 1.0)
         go.set_scale(s, "player"..i)
     end
     -- // Build Team B
-    m_PlayerCountB = 8
-    for i=1, m_PlayerCountB do 
-        local pMicTest = Player(TeamB, m_AllPlayers, m_Ball, false, i)
-        selectedVehicle = pMicTest
-        tinsert(TeamB,pMicTest)
-        tinsert(m_AllPlayers,pMicTest)
+    for i=1, soccerGame.m_PlayerCountB do 
+        local pMicTest = Player(soccerGame.TeamB, soccerGame.m_AllPlayers, soccerGame.m_Ball, false, i)
+        soccerGame.selectedVehicle = pMicTest
+        tinsert(soccerGame.TeamB,pMicTest)
+        tinsert(soccerGame.m_AllPlayers,pMicTest)
         local s = vmath.vector3(0.2, 0.2, 1.0)
         go.set_scale(s, "player"..i+9)
     end
     -- // initialize camera
-    m_redScore = 0
-    m_blueScore = 0
+    soccerGame.m_redScore = 0
+    soccerGame.m_blueScore = 0
 end
 
 function soccerClose() 
-    for k,v in pairs(TeamA) do
+    for k,v in pairs(soccerGame.TeamA) do
         v = nil
     end
-    TeamA = {}
-    for k,v in pairs(TeamB) do
+    soccerGame.TeamA = {}
+    for k,v in pairs(soccerGame.TeamB) do
         v = nil
     end
-    TeamB = {}
-    m_AllPlayers = {}
+    soccerGame.TeamB = {}
+    soccerGame.m_AllPlayers = {}
 end
 
 function soccerReset() 
 
     -- // reset vehicle
-    for k,v in pairs(TeamA) do
+    for k,v in pairs(soccerGame.TeamA) do
         v.reset ()
     end 
-    for k,v in pairs(TeamB) do
+    for k,v in pairs(soccerGame.TeamB) do
         v.reset ()
     end
     m_Ball.reset()
 
     -- // initialize camera
-    m_redScore = 0
-    m_blueScore = 0
+    soccerGame.m_redScore = 0
+    soccerGame.m_blueScore = 0
 
-    oldTime = 0.0
-    currentTime = 0.0
+    soccerGame.oldTime = 0.0
+    soccerGame.currentTime = 0.0
 end
 
 -- // ----------------------------------------------------------------------------
 
-local selectedVehicle = 0
-local oldTime = 0
-local currentTime = 0
-local elapsedTime = 0
-
 function soccerUpdater( dt ) 
 
-    oldTime = currentTime
-    currentTime = currentTime + dt 
-    elapsedTime = dt
+    soccerGame.oldTime = soccerGame.currentTime
+    soccerGame.currentTime = soccerGame.currentTime + dt 
+    soccerGame.elapsedTime = dt
 
-    local offset     = vmath.vector3(centerx, centery, 0)
+    local offset     = vmath.vector3(soccerGame.centerx, soccerGame.centery, 0)
 
     -- // update simulation of test vehicle
-    for k,v in pairs(TeamA) do
-        v.update (currentTime, elapsedTime)
+    for k,v in pairs(soccerGame.TeamA) do
+        v.update (soccerGame.currentTime, soccerGame.elapsedTime)
         local pos = v.mover._lastPosition
-        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * scale + offset, "player"..k)
+        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "player"..k)
     end 
-    for k,v in pairs(TeamB) do 
-        v.update (currentTime, elapsedTime)
+    for k,v in pairs(soccerGame.TeamB) do 
+        v.update (soccerGame.currentTime, soccerGame.elapsedTime)
         local pos = v.mover._lastPosition
-        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * scale + offset, "player"..k+9)
+        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "player"..k+9)
     end 
-    m_Ball.update(currentTime, elapsedTime)
-
-    local pos = m_Ball.mover._lastPosition
-    go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * scale + offset, "ball")
+    if(soccerGame.m_Ball) then 
+        soccerGame.m_Ball.update(soccerGame.currentTime, soccerGame.elapsedTime) 
+        local pos = soccerGame.m_Ball.mover._lastPosition
+        go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "ball")
+    end
 end
