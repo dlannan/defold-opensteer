@@ -109,7 +109,7 @@ soccerGame.playerPosition = {
 soccerGame.playerPositionStore = {}
 --local playerPosition = {}
 
-function ScaleVector( v ) 
+local function ScaleVector( v ) 
 
     v.x = v.x * soccerGame.xscale
     v.z = v.z * soccerGame.zscale
@@ -302,18 +302,19 @@ end
 
 -- // ----------------------------------------------------------------------------
 -- // TODO: This should be a helper!!! Move it!!!
-function setBodyMaterial( obj, newmaterial )    
-end
 
-function soccerSetup(gwidth, gheight) 
-
+local function soccerScreen(gwidth, gheight)
     gwidth = gwidth or 640 
     gheight = gheight or 480 
 
     soccerGame.centerx     = gwidth * 0.5 
     soccerGame.centery     = gheight * 0.5 
     soccerGame.scale       = gheight / 100.0  
-       
+--    print(gwidth, gheight)
+end
+
+local function soccerSetup() 
+
     -- // Make a field
     soccerGame.m_bbox      = AABBox(ScaleVector(Vec3Set(-10,0,-20)), ScaleVector(Vec3Set(10,0,20)))
     -- // Red goal
@@ -350,7 +351,7 @@ function soccerSetup(gwidth, gheight)
     soccerGame.m_blueScore = 0
 end
 
-function soccerClose() 
+local function soccerClose() 
     for k,v in pairs(soccerGame.TeamA) do
         v = nil
     end
@@ -362,7 +363,7 @@ function soccerClose()
     soccerGame.m_AllPlayers = {}
 end
 
-function soccerReset() 
+local function soccerReset() 
 
     -- // reset vehicle
     for k,v in pairs(soccerGame.TeamA) do
@@ -383,7 +384,7 @@ end
 
 -- // ----------------------------------------------------------------------------
 
-function soccerUpdater( dt ) 
+local function soccerUpdater( dt ) 
 
     soccerGame.oldTime = soccerGame.currentTime
     soccerGame.currentTime = soccerGame.currentTime + dt 
@@ -408,3 +409,16 @@ function soccerUpdater( dt )
         go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "ball")
     end
 end
+
+-- // ----------------------------------------------------------------------------
+
+return {
+    close     = soccerClose,
+    reset     = soccerReset,
+    setup     = soccerSetup,
+    screen    = soccerScreen,
+    update    = soccerUpdater,
+    data      = soccerGame,
+}
+
+-- // ----------------------------------------------------------------------------

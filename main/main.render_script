@@ -2,8 +2,6 @@
 -- projection that centers content with maintained aspect ratio and optional zoom
 --
 
-gwidth 		= 0
-gheight 	= 0
 local function fixed_projection(near, far, zoom)
 	local projected_width = render.get_window_width() / (zoom or 1)
 	local projected_height = render.get_window_height() / (zoom or 1)
@@ -55,9 +53,6 @@ function init(self)
 	self.near = -1
 	self.far = 1
 	self.projection_fn = stretch_projection
-
-	gwidth 	= render.get_width()
-	gheight = render.get_height()
 end
 
 function update(self)
