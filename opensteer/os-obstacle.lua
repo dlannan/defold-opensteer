@@ -1,7 +1,7 @@
 -- // ----------------------------------------------------------------------------
 -- // Obstacle: a pure virtual base class for an abstract shape in space, to be
 -- // used with obstacle avoidance.
-//
+-- //
 -- // XXX this should define generic methods for querying the obstacle shape
 
 -- // ----------------------------------------------------------------------------
@@ -64,7 +64,7 @@ local SphericalObstacle = function()
         local inFront = forwardComponent > 0
 
         -- // if all three conditions are met, steer away from sphere center
-        if (inCylinder && nearby && inFront) then 
+        if (inCylinder and nearby and inFront) then 
             return offForwardOffset.mult( -1 )
         else 
             return Vec3.zero

@@ -55,7 +55,7 @@ local LQProximityDatabase = function(center, dimensions, divisions)
         -- // find all neighbors within the given sphere (as center and radius)
         self.findNeighbors = function( center, radius ) 
             
-            local state = { "results": [] end
+            local state = { results= {} }
             lqMapOverAllObjectsInLocality(self.lq, center.x, center.y, center.z, radius, perNeighborCallBackFunction, state)
             return state.results
         end
@@ -69,12 +69,12 @@ local LQProximityDatabase = function(center, dimensions, divisions)
 
     -- // allocate a token to represent a given client object in this database
     self.allocateToken = function(parentObject) 
-        return new self.tokenType(parentObject, this)
+        return self.tokenType(parentObject, self)
     end
 
     -- // count the number of tokens currently in the database
     self.getPopulation = function() 
-        local state = { count: 0 end
+        local state = { count = 0 }
         lqMapOverAllObjects(self.lq, counterCallBackFunction, count)
         return state.count
     end

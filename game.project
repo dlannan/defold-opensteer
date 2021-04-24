@@ -11,6 +11,7 @@ height = 640
 
 [android]
 input_method = HiddenInputField
+package = com.kakutai.wildvfarm
 
 [project]
 title = opensteer

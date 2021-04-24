@@ -23,9 +23,9 @@ local PolylinePathway = function()
     -- // xxx seems like a bad design
     self.segmentLength = 0.0
     self.segmentProjection = 0.0
-    self.local = new Vec3()
-    self.chosen = new Vec3()
-    self.segmentNormal = new Vec3()
+    self.localspace = Vec3()
+    self.chosen = Vec3()
+    self.segmentNormal = Vec3()
 
     self.lengths = {}
     self.normals = {}
@@ -34,7 +34,7 @@ local PolylinePathway = function()
     -- // is the given point inside the path tube?
     self.isInsidePath = function(point) 
         local outside 
-        local tangent = new Vec3()
+        local tangent = Vec3()
         local res = mapPointToPath(point, tangent, outside)
         return res.outside < 0.0
     end
@@ -42,7 +42,7 @@ local PolylinePathway = function()
     -- // how far outside path tube is the given point?  (negative is inside)
     self.howFarOutsidePath = function(point) 
         local outside 
-        local tangent = new Vec3()
+        local tangent = Vec3()
         local res = mapPointToPath(point, tangent, outside)
         return res.outside
     end
@@ -60,10 +60,10 @@ local PolylinePathway = function()
         self.cyclic = _cyclic
         self.pointCount = _pointCount
         self.totalPathLength = 0.0
-        if (self.cyclic) self.pointCount++
-        self.lengths = []
-        self.points  = []
-        self.normals = []
+        if (self.cyclic) then self.pointCount = self.pointCount + 1 end
+        self.lengths = {}
+        self.points  = {}
+        self.normals = {}
 
         -- // loop over all points
         for i = 0, self.pointCount-1  do
@@ -71,7 +71,7 @@ local PolylinePathway = function()
             -- // copy in point locations, closing cycle when appropriate
             local closeCycle = self.cyclic and (i == self.pointCount-1)
             local j = i
-            j = if closeCycle then j = 0 end
+            if closeCycle then j = 0 end
             self.points[i] = _points[j]
 
             -- // for the end of each segment
@@ -97,7 +97,7 @@ local PolylinePathway = function()
 
         local d
         local minDistance = Number.MAX_VALUE
-        local onPath = new Vec3()
+        local onPath = Vec3()
     
         -- // loop over all segments, find the one nearest to the given point
         for i = 1, self.pointCount-1 do 
@@ -126,7 +126,7 @@ local PolylinePathway = function()
         local segmentLengthTotal = 0.0
         local pathDistance = 0.0
     
-        for (i = 1, self.pointCount-1 do
+        for i = 1, self.pointCount-1 do
             self.segmentLength = self.lengths[i]
             self.segmentNormal = self.normals[i]
             d = self.pointToSegmentDistance(point, self.points[i-1], self.points[i])
@@ -156,7 +156,7 @@ local PolylinePathway = function()
         -- // step through segments, subtracting off segment lengths until
         -- // locating the segment that contains the original pathDistance.
         -- // Interpolate along that segment to find 3d point value to return.
-        local result = new Vec3()
+        local result = Vec3()
         for i = 1, self.pointCount-1 do
             self.segmentLength = self.lengths[i]
             if (self.segmentLength < remaining) then 

@@ -139,7 +139,7 @@ function lqClientProxy()
     self.bin = nil
 
     -- // bin tag in the bin list - its a simple hash lookup for a guid 
-    self.bintag = math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
+    self.bintag = math.random().toString(36).substring(2) + (os.date()).getTime().toString(36)
 
     -- // pointer to client object 
     self.object = nil
@@ -173,7 +173,7 @@ end
 -- 
 
 -- // type for a pointer to a function used to map over client objects 
-function lqCallBackFunction (clientObject, distanceSquared, clientQueryState) {end
+function lqCallBackFunction(clientObject, distanceSquared, clientQueryState) end
 
 
 -- // ------------------------------------------------------------------ 
@@ -201,7 +201,7 @@ function lqInternalDB()
     self.divz = 0
 
     -- // pointer to an array of pointers, one for each bin 
-    self.bins = []
+    self.bins = {}
 
     -- // extra bin for "everything else" (points outside super-brick) 
     self.other = nil
@@ -237,8 +237,8 @@ end
 
 
 function lqDeleteDatabase(lq) 
-    lq.bins = {}
-    delete lq
+    lq.bins = nil
+    lq = nil
 end
 
 
@@ -354,7 +354,7 @@ function lqRemoveFromBin(lq, object)
 
     -- // adjust pointers if object is currently in a bin 
     if (binobj !== nil) then
-        delete binobj[object.bintag]
+        binobj[object.bintag] = nil
     end
 
     -- // Null out prev, next and bin pointers of this object. 
@@ -521,12 +521,12 @@ function lqMapOverAllObjectsInLocality( lq, x, y, z, radius, func, clientQuerySt
     end
 
     -- // compute min and max bin coordinates for each dimension 
-    minBinX = ((((x - radius) - lq.originx) / lq.sizex) * lq.divx) | 0
-    minBinY = ((((y - radius) - lq.originy) / lq.sizey) * lq.divy) | 0
-    minBinZ = ((((z - radius) - lq.originz) / lq.sizez) * lq.divz) | 0
-    maxBinX = ((((x + radius) - lq.originx) / lq.sizex) * lq.divx) | 0
-    maxBinY = ((((y + radius) - lq.originy) / lq.sizey) * lq.divy) | 0
-    maxBinZ = ((((z + radius) - lq.originz) / lq.sizez) * lq.divz) | 0
+    minBinX = ((((x - radius) - lq.originx) / lq.sizex) * lq.divx) or 0
+    minBinY = ((((y - radius) - lq.originy) / lq.sizey) * lq.divy) or 0
+    minBinZ = ((((z - radius) - lq.originz) / lq.sizez) * lq.divz) or 0
+    maxBinX = ((((x + radius) - lq.originx) / lq.sizex) * lq.divx) or 0
+    maxBinY = ((((y + radius) - lq.originy) / lq.sizey) * lq.divy) or 0
+    maxBinZ = ((((z + radius) - lq.originz) / lq.sizez) * lq.divz) or 0
 
     -- // clip bin coordinates 
     if (minBinX < 0)         then partlyOut = 1 minBinX = 0 end
@@ -606,7 +606,7 @@ end
 function lqMapOverAllObjectsInBin (binProxyList, func, clientQueryState)
 
     -- // walk down proxy list, applying call-back function to each one 
-    while (binProxyList != nil) do
+    while (binProxyList ~= nil) do
         func(binProxyList.object, 0, clientQueryState)
         binProxyList = binProxyList.next
     end
@@ -615,7 +615,7 @@ end
 
 -- // ------------------------------------------------------------------ 
 -- // Apply a user-supplied function to all objects in the database,
-   regardless of locality (cf lqMapOverAllObjectsInLocality) 
+--   regardless of locality (cf lqMapOverAllObjectsInLocality) 
 
 function lqMapOverAllObjects (lq, func, clientQueryState)
 
