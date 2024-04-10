@@ -42,47 +42,54 @@
 -- //
 -- // ----------------------------------------------------------------------------
 
+
+-- Note: The following lua script is based on the above C++ code, 
+--        however, a sizable amount of changes were needed to work properly.
+--        Feel free to share and use though.
+-- // ----------------------------------------------------------------------------
+
 local tinsert = table.insert
 
 local Vec3 = require("opensteer.os-vec")
 local SimpleVehicle = require("opensteer.os-simplevehicle")
 
 -- // ----------------------------------------------------------------------------
+-- Setup variables
 local MAX_TEAM       = 8
 local soccerGame     = {}
 
-soccerGame.selectedVehicle     = 0
-soccerGame.oldTime             = 0
-soccerGame.currentTime         = 0
-soccerGame.elapsedTime         = 0
+soccerGame.selectedVehicle = 0
+soccerGame.oldTime         = 0
+soccerGame.currentTime     = 0
+soccerGame.elapsedTime     = 0
 
-soccerGame.selectedVehicle    = nil 
-soccerGame.soccer             = nil
-soccerGame.context            = nil
+soccerGame.selectedVehicle = nil 
+soccerGame.soccer          = nil
+soccerGame.context         = nil
 
-soccerGame.zscale = 1.76
-soccerGame.xscale = 2.17
-soccerGame.checkRadius = 30.0
+soccerGame.zscale          = 2.0
+soccerGame.xscale          = 2.4
+soccerGame.checkRadius     = 30.0
 
-soccerGame.ballobj    = nil
+soccerGame.ballobj         = nil
 
-soccerGame.m_PlayerCountA = 8
-soccerGame.m_PlayerCountB = 8
-soccerGame.TeamA = {}
-soccerGame.TeamB = {}
-soccerGame.m_AllPlayers = {}
+soccerGame.m_PlayerCountA  = 8
+soccerGame.m_PlayerCountB  = 8
+soccerGame.TeamA           = {}
+soccerGame.TeamB           = {}
+soccerGame.m_AllPlayers    = {}
 
-soccerGame.m_Ball        = nil
-soccerGame.m_bbox        = nil 
-soccerGame.m_TeamAGoal   = nil 
-soccerGame.m_TeamBGoal   = nil
-soccerGame.junk          = nil
-soccerGame.m_redScore    = 0
-soccerGame.m_blueScore   = 0
+soccerGame.m_Ball          = nil
+soccerGame.m_bbox          = nil 
+soccerGame.m_TeamAGoal     = nil 
+soccerGame.m_TeamBGoal     = nil
+soccerGame.junk            = nil
+soccerGame.m_redScore      = 0
+soccerGame.m_blueScore     = 0
 
-soccerGame.centerx     = 0
-soccerGame.centery     = 0
-soccerGame.scale       = 1
+soccerGame.centerx         = 0
+soccerGame.centery         = 0
+soccerGame.scale           = 1
 
 soccerGame.playerPosition = {
     Vec3Set(0,0,4),
@@ -133,6 +140,7 @@ local AABBox = function(_min, _max)
     return self
 end
 
+-- // ----------------------------------------------------------------------------
 -- // The ball object
 local Ball = function(bbox) 
 
@@ -183,12 +191,12 @@ local Ball = function(bbox)
         if(soccerGame.m_TeamAGoal.InsideZ(soccerGame.m_Ball.mover.position()) and soccerGame.m_TeamAGoal.InsideX(soccerGame.m_Ball.mover.position())) then
             soccerGame.m_Ball.reset()	-- // Ball in blue teams goal, red scores
             soccerGame.m_blueScore = soccerGame.m_blueScore + 1
-            label.set_text("#sc_wild", "WILD: "..soccerGame.m_blueScore)
+            msg.post("/hud", "score", { id = "wild", score = soccerGame.m_blueScore })
         end
         if(soccerGame.m_TeamBGoal.InsideZ(soccerGame.m_Ball.mover.position()) and soccerGame.m_TeamBGoal.InsideX(soccerGame.m_Ball.mover.position())) then
             soccerGame.m_Ball.reset()	-- // Ball in red teams goal, blue scores
             soccerGame.m_redScore = soccerGame.m_redScore + 1
-            label.set_text("#sc_farm", "FARM: "..soccerGame.m_redScore)
+            msg.post("/hud", "score", { id = "farm", score = soccerGame.m_redScore })
         end
 
         self.distance = self.distance + Vec3_distance( self.lastpos, self.mover.position() )
@@ -206,6 +214,8 @@ local Ball = function(bbox)
     return self
 end
 
+-- // ----------------------------------------------------------------------------
+-- // Player agent part of a team.
 local Player = function( others, allplayers, ball, isTeamA, id) 
 
     local self = {}
@@ -313,6 +323,8 @@ local function soccerScreen(gwidth, gheight)
 --    print(gwidth, gheight)
 end
 
+-- // ----------------------------------------------------------------------------
+-- // Setup Ball, Players and Teams.
 local function soccerSetup() 
 
     -- // Make a field
@@ -351,6 +363,8 @@ local function soccerSetup()
     soccerGame.m_blueScore = 0
 end
 
+-- // ----------------------------------------------------------------------------
+-- // Cleanup game and data
 local function soccerClose() 
     for k,v in pairs(soccerGame.TeamA) do
         v = nil
@@ -363,6 +377,8 @@ local function soccerClose()
     soccerGame.m_AllPlayers = {}
 end
 
+-- // ----------------------------------------------------------------------------
+-- // Reset the soccer field
 local function soccerReset() 
 
     -- // reset vehicle
@@ -383,7 +399,7 @@ local function soccerReset()
 end
 
 -- // ----------------------------------------------------------------------------
-
+-- // Update Ball and Players
 local function soccerUpdater( dt ) 
 
     soccerGame.oldTime = soccerGame.currentTime
