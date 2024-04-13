@@ -1,5 +1,5 @@
 [bootstrap]
-main_collection = /main/main.collectionc
+main_collection = /example_crowd/crowd.collectionc
 render = /builtins/render/default.renderc
 
 [script]
@@ -8,6 +8,7 @@ shared_state = 1
 [display]
 width = 960
 height = 640
+samples = 4
 
 [android]
 input_method = HiddenInputField
@@ -15,4 +16,17 @@ package = com.kakutai.wildvfarm
 
 [project]
 title = opensteer
+custom_resources = /assets/
+compress_archive = 0
+
+[render]
+clear_color_red = 0.5176
+clear_color_green = 0.7804
+clear_color_blue = 0.8902
+
+[collection]
+max_instances = 8192
+
+[graphics]
+verify_graphics_calls = 0
 

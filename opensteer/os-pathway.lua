@@ -1,14 +1,5 @@
 
 
--- // construct a PolylinePathway given the number of points (vertices),
--- // an array of points, and a path radius.
-function PolylinePathway1 (_pointCount, _points, _radius, _cyclic) 
-    local pw = new PolylinePathway()
-    pw.initialize (_pointCount, _points, _radius, _cyclic)
-    return pw
-end
-
-
 -- // ----------------------------------------------------------------------------
 -- // PolylinePathway: a simple implementation of the Pathway protocol.  The path
 -- // is a "polyline" a series of line segments between specified points.  A
@@ -35,7 +26,7 @@ local PolylinePathway = function()
     self.isInsidePath = function(point) 
         local outside 
         local tangent = Vec3()
-        local res = mapPointToPath(point, tangent, outside)
+        local res = self.mapPointToPath(point, tangent, outside)
         return res.outside < 0.0
     end
 
@@ -43,7 +34,7 @@ local PolylinePathway = function()
     self.howFarOutsidePath = function(point) 
         local outside 
         local tangent = Vec3()
-        local res = mapPointToPath(point, tangent, outside)
+        local res = self.mapPointToPath(point, tangent, outside)
         return res.outside
     end
 
@@ -66,16 +57,16 @@ local PolylinePathway = function()
         self.normals = {}
 
         -- // loop over all points
-        for i = 0, self.pointCount-1  do
+        for i = 1, self.pointCount  do
         
             -- // copy in point locations, closing cycle when appropriate
-            local closeCycle = self.cyclic and (i == self.pointCount-1)
+            local closeCycle = self.cyclic and (i == self.pointCount)
             local j = i
-            if closeCycle then j = 0 end
+            if closeCycle then j = 1 end
             self.points[i] = _points[j]
 
             -- // for the end of each segment
-            if (i > 0) then 
+            if (i > 1) then 
                 -- // compute the segment length
                 self.normals[i] = self.points[i].sub( self.points[i-1] )
                 self.lengths[i] = self.normals[i].length()
@@ -96,11 +87,11 @@ local PolylinePathway = function()
     self.mapPointToPath = function( point, tangent, outside) 
 
         local d
-        local minDistance = Number.MAX_VALUE
+        local minDistance = math.huge
         local onPath = Vec3()
     
         -- // loop over all segments, find the one nearest to the given point
-        for i = 1, self.pointCount-1 do 
+        for i = 2, self.pointCount do 
             self.segmentLength = self.lengths[i]
             self.segmentNormal = self.normals[i]
             d = self.pointToSegmentDistance(point, self.points[i-1], self.points[i])
@@ -112,7 +103,7 @@ local PolylinePathway = function()
         end
     
         -- // measure how far original point is outside the Pathway's "tube"
-        outside = Vec3.distance(onPath, point) - self.radius
+        outside = Vec3_distance(onPath, point) - self.radius
         local res = { onPath=onPath, tangent=tangent, outside=outside }
         -- // return point on path
         return res
@@ -122,11 +113,11 @@ local PolylinePathway = function()
     -- // given an arbitrary point, convert it to a distance along the path
     self.mapPointToPathDistance = function(point) 
         local d
-        local minDistance = Number.MAX_VALUE
+        local minDistance = math.huge
         local segmentLengthTotal = 0.0
         local pathDistance = 0.0
     
-        for i = 1, self.pointCount-1 do
+        for i = 2, self.pointCount do
             self.segmentLength = self.lengths[i]
             self.segmentNormal = self.normals[i]
             d = self.pointToSegmentDistance(point, self.points[i-1], self.points[i])
@@ -147,17 +138,17 @@ local PolylinePathway = function()
         -- // clip or wrap given path distance according to cyclic flag
         local remaining = pathDistance
         if (self.cyclic) then 
-            remaining = (pathDistance % totalPathLength)
+            remaining = (pathDistance % self.totalPathLength)
         else
-            if (pathDistance < 0.0) then return self.points[0] end
-            if (pathDistance >= self.totalPathLength) then return self.points[self.pointCount-1] end
+            if (pathDistance < 0.0) then return self.points[1] end
+            if (pathDistance >= self.totalPathLength) then return self.points[self.pointCount] end
         end
 
         -- // step through segments, subtracting off segment lengths until
         -- // locating the segment that contains the original pathDistance.
         -- // Interpolate along that segment to find 3d point value to return.
         local result = Vec3()
-        for i = 1, self.pointCount-1 do
+        for i = 2, self.pointCount do
             self.segmentLength = self.lengths[i]
             if (self.segmentLength < remaining) then 
                 remaining = remaining - self.segmentLength
@@ -186,23 +177,32 @@ local PolylinePathway = function()
         if (self.segmentProjection < 0.0)  then 
             self.chosen = ep0
             self.segmentProjection = 0
-            return Vec3.distance(point, ep0)
+            return Vec3_distance(point, ep0)
         end
         if (self.segmentProjection > self.segmentLength) then 
             self.chosen = ep1
             self.segmentProjection = self.segmentLength
-            return Vec3.distance(point, ep1)
+            return Vec3_distance(point, ep1)
         end
 
         -- // otherwise nearest point is projection point on segment
         self.chosen = self.segmentNormal.mult( self.segmentProjection)
         self.chosen = self.chosen.add( ep0 )
-        return Vec3.distance (point, self.chosen)
+        return Vec3_distance (point, self.chosen)
     end
 
     -- // assessor for total path length
     self.getTotalPathLength = function() return self.totalPathLength end
     return self
+end
+
+
+-- // construct a PolylinePathway given the number of points (vertices),
+-- // an array of points, and a path radius.
+function PolylinePathway1 (_pointCount, _points, _radius, _cyclic) 
+    local pw = PolylinePathway()
+    pw.initialize (_pointCount, _points, _radius, _cyclic)
+    return pw
 end
 
 return PolylinePathway

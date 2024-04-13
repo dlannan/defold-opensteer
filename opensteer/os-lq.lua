@@ -139,7 +139,7 @@ function lqClientProxy()
     self.bin = nil
 
     -- // bin tag in the bin list - its a simple hash lookup for a guid 
-    self.bintag = math.random().toString(36).substring(2) + (os.date()).getTime().toString(36)
+    self.bintag = string.format("%012d", math.random(999999999)) ..string.format("%012d", os.time())
 
     -- // pointer to client object 
     self.object = nil
@@ -209,7 +209,7 @@ function lqInternalDB()
 end
 
 -- // Global lq proximity database handle.
-local glq = new lqInternalDB()
+local glq = lqInternalDB()
 
 -- // ------------------------------------------------------------------ 
 -- // Allocate and initialize an LQ database, return a pointer to it.
@@ -225,7 +225,7 @@ local glq = new lqInternalDB()
 
 function lqCreateDatabase (originx, originy, originz, sizex, sizey, sizez, divx, divy, divz)
     
-    local lq = new lqInternalDB()
+    local lq = lqInternalDB()
 
     lqInitDatabase(lq, originx, originy, originz, sizex, sizey, sizez, divx, divy, divz)
     return lq
@@ -261,7 +261,6 @@ function lqInitDatabase (lq, originx, originy, originz, sizex, sizey, sizez, div
     
 	local bincount = divx * divy * divz
     lq.bins = {}
-    lq.bins.length = bincount
 	for i=0, bincount-1 do
         lq.bins[i] = nil
     end 
@@ -275,7 +274,7 @@ end
 
 
 function lqBinCoordsToBinIndex(lq, ix, iy, iz) 
-    return ((ix * lq.divy * lq.divz) + (iy * lq.divz) + iz)
+    return math.floor((ix * lq.divy * lq.divz) + (iy * lq.divz) + iz)
 end
 
 
@@ -286,10 +285,10 @@ end
 -- 
 
 function lqBinForLocation (lq, x, y, z) 
-    local i, ix, iy, iz = nil
+    local i, ix, iy, iz = nil, nil, nil, nil
 
     -- // if point outside super-brick, return the "other" bin 
-    if (x < lq.originx) then               return (lq.other) end
+    if (x < lq.originx) then              return (lq.other) end
     if (y < lq.originy) then              return (lq.other) end
     if (z < lq.originz) then              return (lq.other) end
     if (x >= lq.originx + lq.sizex) then return (lq.other) end
@@ -300,10 +299,10 @@ function lqBinForLocation (lq, x, y, z)
     ix = (((x - lq.originx) / lq.sizex) * lq.divx) or 0
     iy = (((y - lq.originy) / lq.sizey) * lq.divy) or 0
     iz = (((z - lq.originz) / lq.sizez) * lq.divz) or 0
+--pprint(ix.."  "..iy.."  "..iz)
 
     -- // convert to linear bin number 
     i = lqBinCoordsToBinIndex (lq, ix, iy, iz)
-
     -- // return pointer to that bin 
     return i
 end
@@ -314,9 +313,9 @@ end
 --    setup time to initialize its list pointers and associate the proxy
 --    with its client object.  
 -- 
-function lqInitClientProxy (proxy, clientObject) 
+function lqInitClientProxy (clientObject) 
     
-    local proxy = new lqClientProxy()
+    local proxy = lqClientProxy()
     proxy.object = clientObject
     return proxy
 end
@@ -349,11 +348,15 @@ end
 
 function lqRemoveFromBin(lq, object) 
 
-    -- // Object bin
-    local binobj = lq.bins[object.bin]
+    -- If the object has no bin, it hasnt been assigned!!
+    if(object.bin == nil) then return end
 
+    -- // Object bin
+    local binobj = lq.bins[object.bin]   
+    local oldbin = object.bin
+    
     -- // adjust pointers if object is currently in a bin 
-    if (binobj !== nil) then
+    if (binobj ~= nil) then
         binobj[object.bintag] = nil
     end
 
@@ -361,7 +364,7 @@ function lqRemoveFromBin(lq, object)
     object.bin = nil
 
     -- //console.log("Removed:", object)
-    lq.bins[object.bin] = binobj
+    lq.bins[oldbin] = binobj
 end
 
 
@@ -372,6 +375,7 @@ end
 -- 
 
 function lqUpdateForNewLocation(lq, object, x, y, z) 
+
     -- // find bin for new location 
     local idx = lqBinForLocation(lq, x, y, z)
 
@@ -380,17 +384,16 @@ function lqUpdateForNewLocation(lq, object, x, y, z)
     object.y = y
     object.z = z
 
-    if(idx == nil) then return end
     local newBin = lq.bins[idx]
 
     -- // has object moved into a new bin? 
     if(newBin == nil) then
-        -- //console.log("Adding bin!")
+        -- pprint("Adding bin!: "..idx)
         lqAddToBin(lq, object, idx)
     -- // Changing bin for this object?
     else 
-        if(idx !== object.bin) then
-            -- //console.log("Changing bin!")
+        if(idx ~= object.bin) then
+            -- pprint("Changing bin!: "..idx)
             lqRemoveFromBin(lq, object)
             lqAddToBin(lq, object, idx)
         end
@@ -407,8 +410,9 @@ end
 function lqTraverseBinClientObjectList(lq, x, y, z, idx, radiusSquared, func, state) 
     
     local binlist = lq.bins[idx]
-    for idx,bidx in pairs(binlist) do
-        local co = binlist[bidx]
+    if(binlist == nil) then return end
+
+    for bidx, co in pairs(binlist) do
 
         -- // compute distance (squared) from this client              
         -- // object to given locality sphere's centerpoint            
@@ -432,15 +436,22 @@ end
 -- 
 
 function lqMapOverAllObjectsInLocalityClipped ( lq, x, y, z, radius, func, clientQueryState, minBinX, minBinY, minBinZ, maxBinX, maxBinY, maxBinZ) 
-    local i, j, k = nil
-    local iindex, jindex, kindex = nil
+    local i, j, k = nil, nil, nil
+    local iindex, jindex, kindex = nil, nil, nil
 
     local slab = lq.divy * lq.divz
     local row = lq.divz
 
-    local istart = minBinX * slab
-    local jstart = minBinY * row
-    local kstart = minBinZ
+    minBinX = math.floor(minBinX)
+    minBinY = math.floor(minBinY)
+    minBinZ = math.floor(minBinZ)    
+    maxBinX = math.floor(maxBinX)
+    maxBinY = math.floor(maxBinY)
+    maxBinZ = math.floor(maxBinZ)    
+    
+    local istart = math.floor(minBinX * slab)
+    local jstart = math.floor(minBinY * row)
+    local kstart = math.floor(minBinZ)
 
     local co
     local bin
@@ -448,16 +459,15 @@ function lqMapOverAllObjectsInLocalityClipped ( lq, x, y, z, radius, func, clien
 
     -- // loop for x bins across diameter of sphere 
     iindex = istart
-    for i = minBinX, maxBinX do
+    for i = minBinX, maxBinX, 1.0 do
         -- // loop for y bins across diameter of sphere 
         jindex = jstart
-        for j = minBinY, maxBinY do
+        for j = minBinY, maxBinY, 1.0 do
             -- // loop for z bins across diameter of sphere 
             kindex = kstart
-            for k = minBinZ, maxBinZ do
+            for k = minBinZ, maxBinZ, 1.0 do
                 -- // get current bin's client object list 
                 co = iindex + jindex + kindex
-
                 -- // traverse current bin's client object list 
                 lqTraverseBinClientObjectList(lq, x, y, z, co, radiusSquared, func, clientQueryState)
                 kindex = kindex + 1
@@ -632,7 +642,7 @@ end
 
 
 function lqRemoveAllObjectsInBin(lq, bin) 
-    while (bin !== nil) do
+    while (bin ~= nil) do
         lqRemoveFromBin(lq, bin)
     end
 end

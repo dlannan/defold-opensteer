@@ -7,7 +7,7 @@
 local perNeighborCallBackFunction = function(clientObject, distanceSquared, clientQueryState) 
     
     -- //console.log("adding results:", clientObject)
-    clientQueryState.results.push(clientObject)
+    table.insert(clientQueryState.results, clientObject)
 end
 
 
@@ -37,34 +37,37 @@ local LQProximityDatabase = function(center, dimensions, divisions)
     end
 
     -- // constructor
-    self.tokenType = function(parentObject, lqsd) 
+    self.tokenType = function(parentObject, lqpd) 
         
-        self.proxy = lqInitClientProxy(self.proxy, parentObject)
-        self.lq = lqsd.lq
+        local token = {}
+        token.proxy = lqInitClientProxy(parentObject)
+        token.lq = lqpd.lq
 
         -- // destructor
-        self.deltokenType = function() 
-            lqRemoveFromBin (self.proxy)
+        token.deltokenType = function() 
+            lqRemoveFromBin (token.proxy)
         end
 
         -- // the client object calls this each time its position changes
-        self.updateForNewPosition = function( p ) 
-            lqUpdateForNewLocation(self.lq, self.proxy, p.x, p.y, p.z)
+        token.updateForNewPosition = function( p ) 
+            lqUpdateForNewLocation(token.lq, token.proxy, p.x, p.y, p.z)
         end
 
         -- // find all neighbors within the given sphere (as center and radius)
-        self.findNeighbors = function( center, radius ) 
+        token.findNeighbors = function( center, radius ) 
             
             local state = { results= {} }
-            lqMapOverAllObjectsInLocality(self.lq, center.x, center.y, center.z, radius, perNeighborCallBackFunction, state)
+            lqMapOverAllObjectsInLocality(token.lq, center.x, center.y, center.z, radius, perNeighborCallBackFunction, state)
             return state.results
         end
 
         -- // Get statistics about bin populations: min, max and
         -- // average of non-empty bins.
-        self.getBinPopulationStats = function( min, max, average ) 
-            lqGetBinPopulationStats (self.lq, min, max, average)
+        token.getBinPopulationStats = function( min, max, average ) 
+            lqGetBinPopulationStats (token.lq, min, max, average)
         end
+
+        return token
     end
 
     -- // allocate a token to represent a given client object in this database
@@ -75,7 +78,7 @@ local LQProximityDatabase = function(center, dimensions, divisions)
     -- // count the number of tokens currently in the database
     self.getPopulation = function() 
         local state = { count = 0 }
-        lqMapOverAllObjects(self.lq, counterCallBackFunction, count)
+        lqMapOverAllObjects(self.lq, counterCallBackFunction, state)
         return state.count
     end
 

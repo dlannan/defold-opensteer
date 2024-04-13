@@ -18,7 +18,7 @@ local SphericalObstacle = function()
 
     local self = {}
     self.radius = 1.0
-    self.center = new Vec3()
+    self.center = Vec3()
     self._seenFrom = nil
 
     -- // constructors

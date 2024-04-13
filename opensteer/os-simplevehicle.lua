@@ -228,7 +228,7 @@ local SimpleVehicle = function()
     -- // set a random "2D" heading: set local Up to global Y, then effectively
     -- // rotate about it by a random angle (pick random forward, derive side).
     self.randomizeHeadingOnXZPlane = function() 
-        self.setUp(Vec3.up)
+        self.setUp(Vec3_up)
         self.setForward(RandomUnitVectorOnXZPlane())
         self.setSide(self.localRotateForwardToSide(self.forward()))
     end

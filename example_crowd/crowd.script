@@ -1,0 +1,87 @@
+
+local peds = require("example_crowd.pedestrian")
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	msg.post("@render:", "use_camera_projection")
+	msg.post("/camera#camera", "acquire_camera_focus")
+
+	pedestrianSetup(100)
+	self.cam_select = 0
+	self.soldier_select = 1
+	self.turnSpeed = 5.0
+	self.debug = 0
+	
+	pprint(#peds.all.crowd)
+
+	self.soldiers = {}
+	for i=1, #peds.all.crowd do 
+		local ped = peds.all.crowd[i]
+		local pos = ped.mover.position()
+		local p = vmath.vector3( pos.x, pos.y, pos.z )
+		
+		local ctype = "people_men"
+		if(math.random() > 0.5) then ctype = "people_women" end		
+		local soldier = factory.create("/people#"..ctype, p, nil, { health = 10 }, 2.0)
+		
+		local model_url = msg.url(nil, soldier, "model")
+		go.set(model_url, "cursor", math.random())
+		go.set_scale(0.1, soldier)
+		table.insert(self.soldiers, soldier )
+	end 
+end
+
+function final(self)
+end
+
+function update(self, dt)
+
+	peds.updater(dt)
+
+	for i=1, #peds.all.crowd do 
+		local ped = peds.all.crowd[i]
+		local pos = ped.mover.position()
+		local fwd = ped.mover.forward()
+		local angle = math.atan2(fwd.z, fwd.x)
+		local rot = vmath.quat_rotation_x(-math.pi * 0.5) * vmath.quat_rotation_z( -angle + math.pi * 0.5 )
+		local soldierpos = vmath.vector3(pos.x, pos.y, pos.z)
+		
+		go.set_position( soldierpos * peds.all.scale, self.soldiers[i])
+		local newrot = vmath.slerp(dt * self.turnSpeed, go.get_rotation(self.soldiers[i]), rot)
+		go.set_rotation( newrot, self.soldiers[i])
+	end
+end
+
+function fixed_update(self, dt)
+end
+
+function on_input(self, action_id, action)
+	if(action_id == hash("cam_switch") and action.released ) then 
+		self.cam_select = 1-self.cam_select
+		if(self.cam_select == 0) then 
+			msg.post("/camera#camera", "acquire_camera_focus")
+		else 
+			msg.post("/soldier_cam#camera", "acquire_camera_focus")
+		end
+	end
+
+	if(action_id == hash("soldier_select") and action.released ) then 
+		self.soldier_select  = self.soldier_select + 1
+		if(self.soldier_select > #peds.all.crowd) then self.soldier_select = 1 end
+	end
+
+	if(action_id == hash("toggle_debug") and action.released ) then 
+		self.debug = 1 - self.debug
+		peds.debugEnable(self.debug)
+		print(self.debug)
+	end
+		
+	if(self.cam_select == 1) then 
+		local soldier = self.soldiers[self.soldier_select]
+		msg.post("/soldier_obj", "set_parent", { parent_id = soldier, keep_world_transform = 0 })
+		msg.post("@render:", "use_camera_projection")
+	end
+end
+
+function on_reload(self)
+end

@@ -46,7 +46,7 @@ local Vec3 = require("opensteer.os-vec")
 
 local PathIntersection = function(self) 
     self.intersect = 0
-    self.distance = Number.MAX_VALUE
+    self.distance = math.huge
     self.surfacePoint = Vec3()
     self.surfaceNormal = Vec3()
     self.obstacle = SphericalObstacle()
@@ -125,7 +125,7 @@ function SteerLibrary( mover )
         -- // XXX need to improve calling sequence, maybe change to return a
         -- // XXX special path-defined object which includes two Vec3s and a 
         -- // XXX bool (onPath,tangent (ignored), withinPath)
-        tangent = Vec3()
+        local tangent = Vec3()
         local outside = 0.0
         local res = path.mapPointToPath(futurePosition, tangent, outside)
 
@@ -142,6 +142,7 @@ function SteerLibrary( mover )
             local target = path.mapPathDistanceToPoint(targetPathDistance)
         
             drawTarget(target.x, target.z, 2.0)
+            -- pprint(target)
             
             -- // return steering to seek target on path
             return mover.steerForSeek(target)
@@ -190,8 +191,10 @@ function SteerLibrary( mover )
     mover.steerToAvoidObstacles = function( minTimeToCollision, obstacles) 
         
         local avoidance = Vec3()
-        local nearest = new PathIntersection()
-        local next = new PathIntersection()
+        local nearest = {}
+        PathIntersection( nearest )
+        local next = {}
+        PathIntersection( next )
         local minDistanceToCollision = minTimeToCollision * mover.speed()
     
         next.intersect = false
@@ -199,12 +202,11 @@ function SteerLibrary( mover )
     
         -- // test all obstacles for intersection with my forward axis,
         -- // select the one whose point of intersection is nearest
-        for k,okey in pairs(obstacles) do
+        for okey, obst in ipairs(obstacles) do
 
-            local obst = obstacles[okey]
             -- // xxx this should be a generic call on Obstacle, rather than
             -- // xxx this code which presumes the obstacle is spherical
-            next = mover.findNextIntersectionWithSphere(obst, next)
+            next = mover.findNextIntersectionWithSphere(obst)
             if ((nearest.intersect == false) or ((next.intersect ~= false) and (next.distance < nearest.distance))) then
                 nearest = next
             end
@@ -243,7 +245,7 @@ function SteerLibrary( mover )
 
         -- // otherwise, go on to consider potential future collisions
         local steer = 0
-        local threat = undefined
+        local threat = nil
 
         -- // Time (in seconds) until the most immediate collision threat found
         -- // so far.  Initial value is a threshold: don't look more than this
@@ -256,9 +258,8 @@ function SteerLibrary( mover )
 
         -- // for each of the other vehicles, determine which (if any)
         -- // pose the most immediate threat of collision.
-        for k,v in pairs(others) do
+        for k,other in pairs(others) do
             
-            local other = v
             if(other.mover ~= mover) then
                 -- // avoid when future positions are this close (or less)
                 local collisionDangerThreshold = mover.radius() * 2
@@ -436,7 +437,7 @@ function SteerLibrary( mover )
         local neighbors = 0
 
         -- // for each of the other vehicles...        
-        for i=0, flock.length-1 do
+        for i=1, #flock do
             local otherVehicle = flock[i]
             if (mover.inBoidNeighborhood (otherVehicle, mover.radius()*3, maxDistance, cosMaxAngle)) then
                 -- // add in steering contribution
@@ -476,7 +477,7 @@ function SteerLibrary( mover )
         local neighbors = 0
 
         -- // for each of the other vehicles...
-        for i=0, flock.length-1 do
+        for i=1, #flock do
             local otherVehicle = flock[i]
             if (mover.inBoidNeighborhood (otherVehicle, mover.radius()*3, maxDistance, cosMaxAngle))  then
                 -- // accumulate sum of neighbor's heading
@@ -502,7 +503,7 @@ function SteerLibrary( mover )
         local neighbors = 0
 
         -- // for each of the other vehicles...
-        for i=0,flock.length-1 do
+        for i=1,#flock do
             local otherVehicle = flock[i]
             if (mover.inBoidNeighborhood (otherVehicle, mover.radius()*3, maxDistance, cosMaxAngle)) then
                 -- // accumulate sum of neighbor's positions
@@ -610,7 +611,7 @@ function SteerLibrary( mover )
         if(roughTime > maxPredictionTime) then predictionTime = maxPredictionTime end
 
         local target = menace.predictFuturePosition(predictionTime)
-        return steerForFlee (target)
+        return mover.steerForFlee (target)
     end
 
     -- // ------------------------------------------------------------------------
@@ -634,7 +635,8 @@ function SteerLibrary( mover )
 
         local b, c, d, p, q, s = nil
         local lc = Vec3()
-        local intersection = new PathIntersection()
+        local intersection = {}
+        PathIntersection( intersection )
 
         -- // initialize pathIntersection object
         intersection.intersect = false
