@@ -143,7 +143,7 @@ end
 function M.text(text, x, y, color)
 	color = color or M.default_color
 	if M.COLORS[color] then  color = M.COLORS[color]  end
-	V1.x, V1.y = x, y
+	V1.x, V1.y, V1.z = x, y, 0
 	TEXTMSGDATA.text, TEXTMSGDATA.position, TEXTMSGDATA.color = text, V1, color
 	msg.post("@render:", "draw_debug_text", TEXTMSGDATA)
 end

@@ -58,11 +58,12 @@ SphericalObstacle = require("opensteer.os-obstacle")
 LQProximityDatabase = require("opensteer.os-proximity")
 
 local debugdraw_modes = {}
-debugdraw_modes[1] = require "debug-draw.debug-draw"
+debugdraw_modes[1] = require("debug-draw.debug-draw")
 debugdraw_modes[2] = {
     ray = function(v1, v2, col) end,
     circle = function(x, z, r, col) end,
     COLORS = debugdraw_modes[1].COLORS,
+    text = debugdraw_modes[1].text,
 }
 
 local debugdraw = debugdraw_modes[2]
@@ -256,10 +257,10 @@ local Pedestrian = function( pd )
         -- // if obstacle avoidance is needed, do it
         if (obstacleAvoidance.neq(Vec3_zero)) then
             steeringForce = steeringForce.add(obstacleAvoidance);
-        else 
+        end 
             -- // otherwise consider avoiding collisions with others
             local collisionAvoidance = Vec3Set(0.0, 0.0, 0.0)
-            local caLeadTime = 3.0
+            local caLeadTime = 4.0
 
             -- // find all neighbors within maxRadius using proximity database
             -- // (radius is largest distance between vehicles traveling head-on
@@ -268,10 +269,10 @@ local Pedestrian = function( pd )
 
             self.neighbors = self.proximityToken.findNeighbors(self.mover.position(), maxRadius)
             
-            if (leakThrough < frandom01()) then
+            --if (leakThrough < frandom01()) then
                 collisionAvoidance = (self.mover.steerToAvoidNeighbors(caLeadTime, self.neighbors)).mult(10.0)
 --                pprint("Avoiding.."..collisionAvoidance.x.."  "..collisionAvoidance.y.."  "..collisionAvoidance.z )
-            end
+            --end
 
             -- // if collision avoidance is needed, do it
             if (collisionAvoidance.neq(Vec3_zero)) then
@@ -295,7 +296,7 @@ local Pedestrian = function( pd )
                 -- // add in to steeringForce
                 steeringForce = steeringForce.add(pathFollow.mult(0.5))
             end
-        end
+        --end
 
         -- // return steering constrained to global XZ "ground" plane
         steeringForce.setYtoZero()
@@ -442,4 +443,5 @@ return {
     all = gPedestrians,
     updater = pedestrianUpdater,
     debugEnable = debugEnable,
+    debugdraw_modes = debugdraw_modes,
 }
