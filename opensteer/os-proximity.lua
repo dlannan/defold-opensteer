@@ -1,28 +1,31 @@
 
 
--- // called by LQ for each clientObject in the specified neighborhood:
--- // push that clientObject onto the ContentType vector in void*
--- // clientQueryState
--- // (parameter names commented out to prevent compiler warning from "-W")
-local perNeighborCallBackFunction = function(clientObject, distanceSquared, clientQueryState) 
-    
-    -- //console.log("adding results:", clientObject)
-    table.insert(clientQueryState.results, clientObject)
-end
+local proximity = {
+
+    -- // called by LQ for each clientObject in the specified neighborhood:
+    -- // push that clientObject onto the ContentType vector in void*
+    -- // clientQueryState
+    -- // (parameter names commented out to prevent compiler warning from "-W")
+    perNeighborCallBackFunction = function(clientObject, distanceSquared, clientQueryState) 
+        
+        -- //console.log("adding results:", clientObject)
+        table.insert(clientQueryState.results, clientObject)
+    end,
 
 
--- // (parameter names commented out to prevent compiler warning from "-W")
-local counterCallBackFunction = function( clientObject, distanceSquared, clientQueryState ) 
+    -- // (parameter names commented out to prevent compiler warning from "-W")
+    counterCallBackFunction = function( clientObject, distanceSquared, clientQueryState ) 
 
-    clientQueryState.count = clientQueryState.count + 1
-end
+        clientQueryState.count = clientQueryState.count + 1
+    end,
 
+}
 
 -- // ----------------------------------------------------------------------------
 -- // A AbstractProximityDatabase-style wrapper for the LQ bin lattice system
 
 -- // constructor
-local LQProximityDatabase = function(center, dimensions, divisions) 
+proximity.LQProximityDatabase = function(center, dimensions, divisions) 
 
     local self = {}
     self.halfsize = dimensions.mult(0.5)
@@ -57,7 +60,7 @@ local LQProximityDatabase = function(center, dimensions, divisions)
         token.findNeighbors = function( center, radius ) 
             
             local state = { results= {} }
-            lqMapOverAllObjectsInLocality(token.lq, center.x, center.y, center.z, radius, perNeighborCallBackFunction, state)
+            lqMapOverAllObjectsInLocality(token.lq, center.x, center.y, center.z, radius, proximity.perNeighborCallBackFunction, state)
             return state.results
         end
 
@@ -78,7 +81,7 @@ local LQProximityDatabase = function(center, dimensions, divisions)
     -- // count the number of tokens currently in the database
     self.getPopulation = function() 
         local state = { count = 0 }
-        lqMapOverAllObjects(self.lq, counterCallBackFunction, state)
+        lqMapOverAllObjects(self.lq, proximity.counterCallBackFunction, state)
         return state.count
     end
 
@@ -86,5 +89,5 @@ local LQProximityDatabase = function(center, dimensions, divisions)
 end
 
 
-return LQProximityDatabase
+return proximity
 

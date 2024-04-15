@@ -44,7 +44,8 @@
 
 local veclib = require("opensteer.os-vec")
 local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
-
+local obstaclelib = require("opensteer.os-obstacle")
+local SphericalObstacle = obstaclelib.SphericalObstacle
 
 local PathIntersection = function(self) 
     self.intersect = 0

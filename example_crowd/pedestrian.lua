@@ -55,9 +55,11 @@ local veclib = require("opensteer.os-vec")
 local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
 
 SimpleVehicle = require("opensteer.os-simplevehicle")
-Pathway = require("opensteer.os-pathway")
-SphericalObstacle = require("opensteer.os-obstacle")
-LQProximityDatabase = require("opensteer.os-proximity")
+pathwaylib = require("opensteer.os-pathway")
+Pathway = pathwaylib.PolylinePathway
+SphericalObstacle = require("opensteer.os-obstacle").SphericalObstacle
+lqdblib = require("opensteer.os-proximity")
+LQProximityDatabase = lqdblib.LQProximityDatabase
 
 local debugdraw_modes = {}
 debugdraw_modes[1] = require("debug-draw.debug-draw")
@@ -130,7 +132,7 @@ function getTestPath()
         gEndpoint0 = pathPoints[1]
         gEndpoint1 = pathPoints[pathPointCount]
 
-        gTestPath = PolylinePathway1(pathPointCount, pathPoints, pathRadius, false)
+        gTestPath = pathwaylib.PolylinePathway1(pathPointCount, pathPoints, pathRadius, false)
     end
     return gTestPath
 end
