@@ -7,6 +7,9 @@
 -- // ----------------------------------------------------------------------------
 -- // SphericalObstacle a simple concrete type of obstacle
 
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 function SphericalObstacle1 ( r,  c ) 
     local so = new SphericalObstacle()
     so.center = c

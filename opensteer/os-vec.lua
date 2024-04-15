@@ -50,105 +50,117 @@
 -- // ----------------------------------------------------------------------------
 -- // Generic interpolation
 -- 
-function square( a ) 
-    return a * a
-end
+local osmath = {
+    square = function ( a ) 
+        return a * a
+    end,
 
-function interpolate (alpha, x0, x1) 
-    return x0 + ((x1 - x0) * alpha)
-end
+    interpolate = function(alpha, x0, x1) 
+        return x0 + ((x1 - x0) * alpha)
+    end,
+
+    interpolateV = function (alpha, x0, x1) 
+        return x0.add((x1.sub(x0)).mult(alpha));
+    end,
+
+    maxXXX = function( x, y) if (x > y) then return x else return y end end,
+    minXXX = function( x, y) if (x < y) then return x else return y end end,
+
+    -- // ----------------------------------------------------------------------------
+    -- // Random number utilities
+    -- 
+    -- 
+    -- // Returns a float randomly distributed between 0 and 1
+
+    frandom01 = function() 
+        return (math.random())
+    end,
 
 
-function interpolateV (alpha, x0, x1) 
-    return x0.add((x1.sub(x0)).mult(alpha));
-end
+    -- // Returns a float randomly distributed between lowerBound and upperBound
 
-function maxXXX ( x, y) if (x > y) then return x else return y end end
-function minXXX ( x, y) if (x < y) then return x else return y end end
+    frandom2 = function ( lowerBound, upperBound ) 
+        local diff = upperBound - lowerBound
+        return math.floor((math.random() * diff) + lowerBound)
+    end,
 
+
+    -- // ----------------------------------------------------------------------------
+    -- // Constrain a given value (x) to be between two (ordered) bounds: min
+    -- // and max.  Returns x if it is between the bounds, otherwise returns
+    -- // the nearer bound.
+
+    clip = function( x, minv, maxv) 
+        if (x < minv) then return minv end 
+        if (x > maxv) then return maxv end 
+        return x
+    end,
+
+    -- // ----------------------------------------------------------------------------
+    -- // remap a value specified relative to a pair of bounding values
+    -- // to the corresponding value relative to another pair of bounds.
+    -- // Inspired by (dyna:remap-interval y y0 y1 z0 z1)
+
+    remapInterval = function(x, in0, in1, out0, out1) 
+        -- // uninterpolate: what is x relative to the interval in0:in1?
+        local relative = (x - in0) / (in1 - in0)
+
+        -- // now interpolate between output interval based on relative x
+        return osmath.interpolate(relative, out0, out1)
+    end,
+
+    -- // Like remapInterval but the result is clipped to remain between
+    -- // out0 and out1
+    remapIntervalClip = function(x, in0, in1, out0, out1) 
+        -- // uninterpolate: what is x relative to the interval in0:in1?
+        local relative = (x - in0) / (in1 - in0)
+
+        -- // now interpolate between output interval based on relative x
+        return osmath.interpolate(osmath.clip(relative, 0, 1), out0, out1)
+    end,
+
+    -- // Like remapInterval but the result is clipped to remain between
+    -- // out0 and out1
+    remapIntervalClipV = function(x, in0, in1, out0, out1) 
+        -- // uninterpolate: what is x relative to the interval in0:in1?
+        local relative = (x - in0) / (in1 - in0)
+
+        -- // now interpolate between output interval based on relative x
+        return osmath.interpolateV(osmath.clip(relative, 0.0, 1.0), out0, out1)
+    end,
+
+
+    -- // ----------------------------------------------------------------------------
+    -- // classify a value relative to the interval between two bounds:
+    -- //     returns -1 when below the lower bound
+    -- //     returns  0 when between the bounds (inside the interval)
+    -- //     returns +1 when above the upper bound
+
+    intervalComparison = function( x, lowerBound, upperBound) 
+        if (x < lowerBound) then return -1 end
+        if (x > upperBound) then return 1 end
+        return 0
+    end,
+
+    -- // ----------------------------------------------------------------------------
+
+    clamp = function( valueToClamp, minValue, maxValue) 
+
+        if ( valueToClamp < minValue ) then 
+            return minValue
+        else 
+            if ( valueToClamp > maxValue ) then 
+                return maxValue
+            end
+        end 
+        return valueToClamp
+    end,
+}
 
 -- // ----------------------------------------------------------------------------
--- // Random number utilities
--- 
--- 
--- // Returns a float randomly distributed between 0 and 1
 
-function frandom01() 
-    return (math.random())
-end
-
-
--- // Returns a float randomly distributed between lowerBound and upperBound
-
-function frandom2( lowerBound, upperBound ) 
-    local diff = upperBound - lowerBound
-    return math.floor((math.random() * diff) + lowerBound)
-end
-
-
--- // ----------------------------------------------------------------------------
--- // Constrain a given value (x) to be between two (ordered) bounds: min
--- // and max.  Returns x if it is between the bounds, otherwise returns
--- // the nearer bound.
-
-function clip( x, minv, maxv) 
-    if (x < minv) then return minv end 
-    if (x > maxv) then return maxv end 
-    return x
-end
-
--- // ----------------------------------------------------------------------------
--- // remap a value specified relative to a pair of bounding values
--- // to the corresponding value relative to another pair of bounds.
--- // Inspired by (dyna:remap-interval y y0 y1 z0 z1)
-
-function remapInterval (x, in0, in1, out0, out1) 
-    -- // uninterpolate: what is x relative to the interval in0:in1?
-    local relative = (x - in0) / (in1 - in0)
-
-    -- // now interpolate between output interval based on relative x
-    return interpolate(relative, out0, out1)
-end
-
-
--- // Like remapInterval but the result is clipped to remain between
--- // out0 and out1
-function remapIntervalClip(x, in0, in1, out0, out1) 
-    -- // uninterpolate: what is x relative to the interval in0:in1?
-    local relative = (x - in0) / (in1 - in0)
-
-    -- // now interpolate between output interval based on relative x
-    return interpolate(clip(relative, 0, 1), out0, out1)
-end
-
-
--- // Like remapInterval but the result is clipped to remain between
--- // out0 and out1
-function remapIntervalClipV (x, in0, in1, out0, out1) 
-    -- // uninterpolate: what is x relative to the interval in0:in1?
-    local relative = (x - in0) / (in1 - in0)
-
-    -- // now interpolate between output interval based on relative x
-    return interpolateV(clip(relative, 0.0, 1.0), out0, out1)
-end
-
-
--- // ----------------------------------------------------------------------------
--- // classify a value relative to the interval between two bounds:
--- //     returns -1 when below the lower bound
--- //     returns  0 when between the bounds (inside the interval)
--- //     returns +1 when above the upper bound
-
-function intervalComparison ( x, lowerBound, upperBound) 
-    if (x < lowerBound) then return -1 end
-    if (x > upperBound) then return 1 end
-    return 0
-end
-
--- // ----------------------------------------------------------------------------
-
-function scalarRandomWalk(initial, walkspeed, minv, maxv) 
-    local next = initial + (((frandom01() * 2) - 1) * walkspeed)
+osmath.scalarRandomWalk = function(initial, walkspeed, minv, maxv) 
+    local next = initial + (((osmath.frandom01() * 2) - 1) * walkspeed)
     if (next < minv) then return minv end
     if (next > maxv) then return maxv end
     return next
@@ -156,29 +168,17 @@ end
 
 -- // ----------------------------------------------------------------------------
 
-function blendIntoAccumulator( smoothRate, newValue, smoothedAccumulator ) 
-    return interpolate( clip(smoothRate, 0.0, 1.0), smoothedAccumulator, newValue)
+osmath.blendIntoAccumulator = function( smoothRate, newValue, smoothedAccumulator ) 
+    return osmath.interpolate( osmath.clip(smoothRate, 0.0, 1.0), smoothedAccumulator, newValue)
 end
 
 -- // ----------------------------------------------------------------------------
 
-function blendIntoAccumulatorV( smoothRate, newValue, smoothedAccumulator ) 
-    return interpolateV( clip(smoothRate, 0.0, 1.01), smoothedAccumulator, newValue)
-end 
-
--- // ----------------------------------------------------------------------------
-
-function clamp( valueToClamp, minValue, maxValue) 
-
-    if ( valueToClamp < minValue ) then 
-        return minValue
-    else 
-        if ( valueToClamp > maxValue ) then 
-            return maxValue
-        end
-    end 
-    return valueToClamp
+osmath.blendIntoAccumulatorV = function ( smoothRate, newValue, smoothedAccumulator ) 
+    return osmath.interpolateV( osmath.clip(smoothRate, 0.0, 1.01), smoothedAccumulator, newValue)
 end
+
+local osvec = {}
 
 -- // ----------------------------------------------------------------------------
 
@@ -194,31 +194,31 @@ local Vec3 = function()
 
     -- // vector addition
     self.add = function(v) 
-        local res = Vec3Set( self.x+v.x, self.y+v.y, self.z+v.z )
+        local res = osvec.Vec3Set( self.x+v.x, self.y+v.y, self.z+v.z )
         return res
     end
 
     -- // vector subtraction
     self.sub = function(v) 
-        local res = Vec3Set( self.x-v.x, self.y-v.y, self.z-v.z )
+        local res = osvec.Vec3Set( self.x-v.x, self.y-v.y, self.z-v.z )
         return res
     end 
 
     -- // unary minus
     self.neg = function() 
-        local res = Vec3Set( -self.x, -self.y, -self.z )
+        local res = osvec.Vec3Set( -self.x, -self.y, -self.z )
         return res
     end
     
     -- // vector times scalar product (scale length of vector times argument)
     self.mult = function(s) 
-        local res = Vec3Set( self.x*s, self.y*s, self.z*s )
+        local res = osvec.Vec3Set( self.x*s, self.y*s, self.z*s )
         return res
     end 
 
     -- // vector divided by a scalar (divide length of vector by argument)
     self.div = function(s) 
-        local res = Vec3Set( self.x/s, self.y/s, self.z/s )
+        local res = osvec.Vec3Set( self.x/s, self.y/s, self.z/s )
         return res
     end 
 
@@ -244,7 +244,7 @@ local Vec3 = function()
         if(len>0) then 
             return self.div(len)
         else 
-            return Vec3Set( self.x, self.y, self.z )
+            return osvec.Vec3Set( self.x, self.y, self.z )
         end 
     end 
 
@@ -291,7 +291,7 @@ local Vec3 = function()
     end
 
     self.clone = function()
-        return Vec3Set( self.x, self.y, self.z )
+        return osvec.Vec3Set( self.x, self.y, self.z )
     end
     
     self.copy = function(v) 
@@ -342,7 +342,7 @@ local Vec3 = function()
     self.rotateAboutGlobalY = function(angle) 
         local s = math.sin(angle)
         local c = math.cos(angle)
-        return Vec3Set((self.x * c) + (self.z * s), (self.y), (self.z * c) - (self.x * s))
+        return osvec.Vec3Set((self.x * c) + (self.z * s), (self.y), (self.z * c) - (self.x * s))
     end
 
     -- // version for caching sin/cos computation
@@ -352,7 +352,7 @@ local Vec3 = function()
             sin = Math.sin(angle)
             cos = Math.cos(angle)
         end 
-        return Vec3Set ((self.x * cos) + (self.z * sin), (self.y), (self.z * cos) - (self.x * sin))
+        return osvec.Vec3Set ((self.x * cos) + (self.z * sin), (self.y), (self.z * cos) - (self.x * sin))
     end
 
     -- // if this position is outside sphere, push it back in by one diameter
@@ -369,51 +369,36 @@ local Vec3 = function()
     return self
 end
 
-function Vec3Set( X, Y, Z ) 
+
+
+osvec.Vec3Set = function( X, Y, Z ) 
 
     local newVec = Vec3()
     newVec.set(X, Y, Z)
     return newVec
 end
 
-function Vec3FromTJS( tjsPos ) 
+osvec.Vec3FromTJS = function ( tjsPos ) 
 
     local newVec = Vec3()
     newVec.set(tjsPos.x, tjsPos.y, tjsPos.z)
     return newVec
 end
 
-
--- // ----------------------------------------------------------------------------
--- // names for frequently used vector constants
-Vec3_zero = Vec3Set(0, 0, 0)
-Vec3_side = Vec3Set(-1, 0, 0)
-Vec3_up = Vec3Set(0, 1, 0)
-Vec3_forward = Vec3Set(0, 0, 1)
-
 -- // @todo Remove - use @c distance from the Vec3Utilitites header instead.
 -- // XXX experimental (4-1-03 cwr): is this the right approach?  defining
 -- // XXX "Vec3 distance (vec3, Vec3)" collided with STL's distance template.
-Vec3_distance = function( a, b ) return(a.sub(b)).length() end
-
--- // return cross product a x b
-function crossProduct(a, b) 
-    
-    local result = Vec3Set((a.y * b.z) - (a.z * b.y),
-                (a.z * b.x) - (a.x * b.z),
-                (a.x * b.y) - (a.y * b.x))
-    return result
-end
+osvec.Vec3_distance = function( a, b ) return(a.sub(b)).length() end
 
 -- // ----------------------------------------------------------------------------
 -- // Returns a position randomly distributed inside a sphere of unit radius
 -- // centered at the origin.  Orientation will be random and length will range
 -- // between 0 and 1
 -- 
-function RandomVectorInUnitRadiusSphere () 
+osvec.RandomVectorInUnitRadiusSphere = function () 
     local v = Vec3();
     repeat
-        v.set((frandom01()*2) - 1, (frandom01()*2) - 1, (frandom01()*2) - 1)
+        v.set((osmath.frandom01()*2) - 1, (osmath.frandom01()*2) - 1, (osmath.frandom01()*2) - 1)
     until (v.length() < 1)
     return v
 end
@@ -424,39 +409,17 @@ end
 -- // on the XZ (Y=0) plane, centered at the origin.  Orientation will be
 -- // random and length will range between 0 and 1
 -- 
-function randomVectorOnUnitRadiusXZDisk() 
+osvec.randomVectorOnUnitRadiusXZDisk = function() 
     local v = Vec3()
     repeat
-        v.set((frandom01()*2) - 1,  0,  (frandom01()*2) - 1)
+        v.set((osmath.frandom01()*2) - 1,  0,  (osmath.frandom01()*2) - 1)
     until (v.length() < 1)
     return v
 end
 
-
--- // ----------------------------------------------------------------------------
--- // Returns a position randomly distributed on the surface of a sphere
--- // of unit radius centered at the origin.  Orientation will be random
--- // and length will be 1
-function RandomUnitVector () 
-    local v = RandomVectorInUnitRadiusSphere()
-    return v.normalize()
-end
-
--- 
--- // ----------------------------------------------------------------------------
--- // Returns a position randomly distributed on a circle of unit radius
--- // on the XZ (Y=0) plane, centered at the origin.  Orientation will be
--- // random and length will be 1
-function RandomUnitVectorOnXZPlane () 
-    local v = RandomVectorInUnitRadiusSphere()
-    v.setYtoZero()
-    return v.normalize()
-end
-
-
 -- // ----------------------------------------------------------------------------
 -- // used by limitMaxDeviationAngle / limitMinDeviationAngle below
-function vecLimitDeviationAngleUtility (insideOrOutside, source, cosineOfConeAngle, basis) 
+osvec.vecLimitDeviationAngleUtility = function (insideOrOutside, source, cosineOfConeAngle, basis) 
     
     -- // immediately return zero length input vectors
     local sourceLength = source.length()
@@ -493,14 +456,85 @@ function vecLimitDeviationAngleUtility (insideOrOutside, source, cosineOfConeAng
     return (c0.add(c1)).multV( sourceLength )
 end
 
+-- // ----------------------------------------------------------------------------
+-- // Returns the distance between a point and a line.  The line is defined in
+-- // terms of a point on the line ("lineOrigin") and a UNIT vector parallel to
+-- // the line ("lineUnitTangent")
+-- 
+osvec.distanceFromLine = function(point, lineOrigin, lineUnitTangent) 
+    local offset = point.sub( lineOrigin )
+    local perp = offset.perpendicularComponent (lineUnitTangent)
+    return perp.length()
+end
+
+osvec.nearestPointOnSegment = function( point, segmentPoint0, segmentPoint1 ) 
+    -- // convert the test point to be "local" to ep0
+    local vl = Vec3()
+    vl.setV( point.sub( segmentPoint0 ))
+    
+    -- // find the projection of "local" onto "segmentNormal"
+    local segment = Vec3()
+    segment.setV( segmentPoint1.sub( segmentPoint0 ))
+    local segmentLength = segment.length()
+    
+    -- //assert( 0 != segmentLength and "Segment mustn't be of length zero." );
+    
+    local segmentNormalized = Vec3()
+    segmentNormalized.setV( segment.div(segmentLength) );
+    local segmentProjection = segmentNormalized.dot(vl)
+    
+    segmentProjection = osmath.clamp( segmentProjection, 0.0, segmentLength )
+    
+    local result = Vec3()
+    result.setV( segmentNormalized.mult( segmentProjection ))
+    result =  result.add(segmentPoint0)
+    return result
+end
+
+
+-- // ----------------------------------------------------------------------------
+-- // names for frequently used vector constants
+osvec.Vec3_zero = osvec.Vec3Set(0, 0, 0)
+osvec.Vec3_side = osvec.Vec3Set(-1, 0, 0)
+osvec.Vec3_up = osvec.Vec3Set(0, 1, 0)
+osvec.Vec3_forward = osvec.Vec3Set(0, 0, 1)
+
+-- // return cross product a x b
+osvec.crossProduct = function(a, b) 
+    
+    local result = osvec.Vec3Set((a.y * b.z) - (a.z * b.y),
+                (a.z * b.x) - (a.x * b.z),
+                (a.x * b.y) - (a.y * b.x))
+    return result
+end
+
+-- // ----------------------------------------------------------------------------
+-- // Returns a position randomly distributed on the surface of a sphere
+-- // of unit radius centered at the origin.  Orientation will be random
+-- // and length will be 1
+osvec.RandomUnitVector = function  () 
+    local v = osvec.RandomVectorInUnitRadiusSphere()
+    return v.normalize()
+end
+
+-- 
+-- // ----------------------------------------------------------------------------
+-- // Returns a position randomly distributed on a circle of unit radius
+-- // on the XZ (Y=0) plane, centered at the origin.  Orientation will be
+-- // random and length will be 1
+osvec.RandomUnitVectorOnXZPlane = function  () 
+    local v = osvec.RandomVectorInUnitRadiusSphere()
+    v.setYtoZero()
+    return v.normalize()
+end
 
 -- // ----------------------------------------------------------------------------
 -- // Enforce an upper bound on the angle by which a given arbitrary vector
 -- // diviates from a given reference direction (specified by a unit basis
 -- // vector).  The effect is to clip the "source" vector to be inside a cone
 -- // defined by the basis and an angle.
-function limitMaxDeviationAngle ( source, cosineOfConeAngle, basis) 
-    return vecLimitDeviationAngleUtility (true, source, cosineOfConeAngle, basis)
+osvec.limitMaxDeviationAngle = function ( source, cosineOfConeAngle, basis) 
+    return osvec.vecLimitDeviationAngleUtility (true, source, cosineOfConeAngle, basis)
 end
 
 
@@ -510,34 +544,22 @@ end
 -- // vector).  The effect is to clip the "source" vector to be outside a cone
 -- // defined by the basis and an angle.
 
-function limitMinDeviationAngle ( source, cosineOfConeAngle, basis) 
-    return vecLimitDeviationAngleUtility (false, source, cosineOfConeAngle, basis)
-end
-
-
--- // ----------------------------------------------------------------------------
--- // Returns the distance between a point and a line.  The line is defined in
--- // terms of a point on the line ("lineOrigin") and a UNIT vector parallel to
--- // the line ("lineUnitTangent")
--- 
-function distanceFromLine (point, lineOrigin, lineUnitTangent) 
-    local offset = point.sub( lineOrigin )
-    local perp = offset.perpendicularComponent (lineUnitTangent)
-    return perp.length()
+osvec.limitMinDeviationAngle = function ( source, cosineOfConeAngle, basis) 
+    return osvec.vecLimitDeviationAngleUtility (false, source, cosineOfConeAngle, basis)
 end
 
 -- // ----------------------------------------------------------------------------
 -- // given a vector, return a vector perpendicular to it (note that this
 -- // arbitrarily selects one of the infinitude of perpendicular vectors)
-findPerpendicularIn3d = function(direction) 
+osvec.findPerpendicularIn3d = function(direction) 
     -- // to be filled in:
     local quasiPerp = Vec3() --  // a direction which is "almost perpendicular"
     local result = Vec3()    --  // the computed perpendicular to be returned
 
     -- // three mutually perpendicular basis vectors
-    local i = Vec3Set(1, 0, 0)
-    local j = Vec3Set(0, 1, 0)
-    local k = Vec3Set(0, 0, 1)
+    local i = osvec.Vec3Set(1, 0, 0)
+    local j = osvec.Vec3Set(0, 1, 0)
+    local k = osvec.Vec3Set(0, 0, 1)
 
     -- // measure the projection of "direction" onto each of the axes
     local id = i.dot (direction)
@@ -559,36 +581,11 @@ findPerpendicularIn3d = function(direction)
     -- // which is guaranteed to be perpendicular to both of them
     result.cross(direction, quasiPerp)
     return result
-end 
-
-
-function nearestPointOnSegment( point, segmentPoint0, segmentPoint1 ) 
-    -- // convert the test point to be "local" to ep0
-    local vl = Vec3()
-    vl.setV( point.sub( segmentPoint0 ))
-    
-    -- // find the projection of "local" onto "segmentNormal"
-    local segment = Vec3()
-    segment.setV( segmentPoint1.sub( segmentPoint0 ))
-    local segmentLength = segment.length()
-    
-    -- //assert( 0 != segmentLength and "Segment mustn't be of length zero." );
-    
-    local segmentNormalized = Vec3()
-    segmentNormalized.setV( segment.div(segmentLength) );
-    local segmentProjection = segmentNormalized.dot(vl)
-    
-    segmentProjection = clamp( segmentProjection, 0.0, segmentLength )
-    
-    local result = Vec3()
-    result.setV( segmentNormalized.mult( segmentProjection ))
-    result =  result.add(segmentPoint0)
-    return result
 end
 
-function pointToSegmentDistance ( point, segmentPoint0, segmentPoint1) 
-    return Vec3.distance( point, nearestPointOnSegment( point, segmentPoint0, segmentPoint1 ) )
-end 
+osvec.pointToSegmentDistance = function ( point, segmentPoint0, segmentPoint1) 
+    return Vec3.distance( point, osvec.nearestPointOnSegment( point, segmentPoint0, segmentPoint1 ) )
+end
 
 -- // ----------------------------------------------------------------------------
 -- // candidates for global utility functions
@@ -600,4 +597,8 @@ end
 -- // normalized
 -- // ----------------------------------------------------------------------------
 
-return Vec3 
+return {
+    osmath    = osmath, 
+    osvec     = osvec,
+    vec3      = Vec3,
+}

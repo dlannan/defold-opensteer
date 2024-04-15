@@ -50,7 +50,9 @@
 
 local tinsert = table.insert
 
-local Vec3 = require("opensteer.os-vec")
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 local SimpleVehicle = require("opensteer.os-simplevehicle")
 
 -- // ----------------------------------------------------------------------------
@@ -92,23 +94,23 @@ soccerGame.centery         = 0
 soccerGame.scale           = 1
 
 soccerGame.playerPosition = {
-    Vec3Set(0,0,4),
-    Vec3Set(-5,0,7),
-    Vec3Set(5,0,7),
-    Vec3Set(-3,0,10),
-    Vec3Set(3,0,10),
-    Vec3Set(-8,0, 15),
-    Vec3Set(0,0,15),
-    Vec3Set(8,0,15),
+    osvec.Vec3Set(0,0,4),
+    osvec.Vec3Set(-5,0,7),
+    osvec.Vec3Set(5,0,7),
+    osvec.Vec3Set(-3,0,10),
+    osvec.Vec3Set(3,0,10),
+    osvec.Vec3Set(-8,0, 15),
+    osvec.Vec3Set(0,0,15),
+    osvec.Vec3Set(8,0,15),
 
-    Vec3Set(0,0,-4),
-    Vec3Set(-5,0,-7),
-    Vec3Set(5,0,-7),
-    Vec3Set(-3,0,-10),
-    Vec3Set(3,0,-10),
-    Vec3Set(-8,0, -15),
-    Vec3Set(0,0,-15),
-    Vec3Set(8,0,-15),
+    osvec.Vec3Set(0,0,-4),
+    osvec.Vec3Set(-5,0,-7),
+    osvec.Vec3Set(5,0,-7),
+    osvec.Vec3Set(-3,0,-10),
+    osvec.Vec3Set(3,0,-10),
+    osvec.Vec3Set(-8,0, -15),
+    osvec.Vec3Set(0,0,-15),
+    osvec.Vec3Set(8,0,-15),
 }
 
 
@@ -134,8 +136,8 @@ local AABBox = function(_min, _max)
     self.InsideX = function(p) if((p.x < self.m_min.x) or (p.x > self.m_max.x)) then return false else return true end end 
     self.InsideZ = function(p) if((p.z < self.m_min.z) or (p.z > self.m_max.z)) then return false else return true end end
     self.draw = function(ctx) 
-        local b = Vec3Set(self.m_min.x, 0, self.m_max.z)
-        local c = Vec3Set(self.m_max.x, 0, self.m_min.z)
+        local b = osvec.Vec3Set(self.m_min.x, 0, self.m_max.z)
+        local c = osvec.Vec3Set(self.m_max.x, 0, self.m_min.z)
     end
     return self
 end
@@ -164,7 +166,7 @@ local Ball = function(bbox)
         self.mover.setMaxSpeed(70.0)         -- // velocity is clipped to this magnitude
         self.mover.setRadius(1.2)
 
-        self.mover.setPosition(Vec3Set(0.0, 0.0, 0.0))
+        self.mover.setPosition(osvec.Vec3Set(0.0, 0.0, 0.0))
         -- //self.mover.clearTrailHistory ()    -- // prevent long streaks due to teleportation 
         -- //self.mover.setTrailParameters (100, 6000)
         self.lastpos = self.mover.position().clone()
@@ -178,12 +180,12 @@ local Ball = function(bbox)
         -- // are we now outside the field?
         if(not soccerGame.m_bbox.InsideX(self.mover.position())) then
             local d = self.mover.velocity()
-            self.mover.regenerateOrthonormalBasis(Vec3Set(-d.x, d.y, d.z))
+            self.mover.regenerateOrthonormalBasis(osvec.Vec3Set(-d.x, d.y, d.z))
             self.mover.applySteeringForce(self.mover.velocity(), elapsedTime)
         end
         if(not soccerGame.m_bbox.InsideZ(self.mover.position())) then
             local d = self.mover.velocity()
-            self.mover.regenerateOrthonormalBasis(Vec3Set(d.x, d.y, -d.z))
+            self.mover.regenerateOrthonormalBasis(osvec.Vec3Set(d.x, d.y, -d.z))
             self.mover.applySteeringForce(self.mover.velocity(), elapsedTime)
         end
 
@@ -199,9 +201,9 @@ local Ball = function(bbox)
             msg.post("/hud", "score", { id = "farm", score = soccerGame.m_redScore })
         end
 
-        self.distance = self.distance + Vec3_distance( self.lastpos, self.mover.position() )
+        self.distance = self.distance + osvec.Vec3_distance( self.lastpos, self.mover.position() )
         local pos = self.mover.position()
-        self.mover.setPosition( Vec3Set(pos.x, 0.0, pos.z))
+        self.mover.setPosition( osvec.Vec3Set(pos.x, 0.0, pos.z))
         self.lastpos = self.mover.position().clone()
     end
 
@@ -237,9 +239,9 @@ local Player = function( others, allplayers, ball, isTeamA, id)
         self.mover.setRadius(1.25)
 
         -- // Place me on my part of the field, looking at oponnents goal
-        local Xpos = -frandom01()*20
-        if (self.b_ImTeamA == true) then Xpos = frandom01()*20  end
-        self.mover.setPosition( Vec3Set(Xpos, 0, (frandom01()-0.5)*20) )
+        local Xpos = -osmath.frandom01()*20
+        if (self.b_ImTeamA == true) then Xpos = osmath.frandom01()*20  end
+        self.mover.setPosition( osvec.Vec3Set(Xpos, 0, (osmath.frandom01()-0.5)*20) )
         if(self.m_MyID <= 9) then 
             if(self.b_ImTeamA == true) then 
                 self.mover.setPosition(soccerGame.playerPosition[self.m_MyID])
@@ -256,7 +258,7 @@ local Player = function( others, allplayers, ball, isTeamA, id)
     self.update = function( currentTime, elapsedTime) 
 
         -- // if I hit the ball, kick it.
-        local distToBall = Vec3_distance (self.mover.position(), self.m_Ball.mover.position())
+        local distToBall = osvec.Vec3_distance (self.mover.position(), self.m_Ball.mover.position())
         local sumOfRadii = self.mover.radius() + self.m_Ball.mover.radius()
         if(distToBall < sumOfRadii) then
             self.m_Ball.kick((self.m_Ball.mover.position().sub(self.mover.position())).mult(10.0), elapsedTime)
@@ -264,10 +266,10 @@ local Player = function( others, allplayers, ball, isTeamA, id)
 
         -- // otherwise consider avoiding collisions with others
         local collisionAvoidance = self.mover.steerToAvoidNeighbors(1.0, self.m_AllPlayers)
-        if(collisionAvoidance.neq(Vec3_zero)) then
+        if(collisionAvoidance.neq(osvec.Vec3_zero)) then
             self.mover.applySteeringForce (collisionAvoidance, elapsedTime)
         else 
-            local distHomeToBall = Vec3_distance (self.m_home, self.m_Ball.mover.position())
+            local distHomeToBall = osvec.Vec3_distance (self.m_home, self.m_Ball.mover.position())
             if( distHomeToBall < soccerGame.checkRadius) then
                 
                 -- // go for ball if I'm on the 'right' side of the ball
@@ -280,8 +282,8 @@ local Player = function( others, allplayers, ball, isTeamA, id)
                 else
                     local Z = 1.0
                     if self.m_Ball.mover.position().x - self.mover.position().x > 0 then Z = -1.0 end
-                    local Zset = Vec3Set(Z,0,-3)
-                    if (self.b_ImTeamA) then Zset = Vec3Set(Z,0,3) end
+                    local Zset = osvec.Vec3Set(Z,0,-3)
+                    if (self.b_ImTeamA) then Zset = osvec.Vec3Set(Z,0,3) end
                     local behindBall = self.m_Ball.mover.position().add( Zset )
                     local behindBallForce = self.mover.xxxsteerForSeek(behindBall)
                     -- //annotationLine (position(), behindBall , Vec3(0,1,0))
@@ -328,11 +330,11 @@ end
 local function soccerSetup() 
 
     -- // Make a field
-    soccerGame.m_bbox      = AABBox(ScaleVector(Vec3Set(-10,0,-20)), ScaleVector(Vec3Set(10,0,20)))
+    soccerGame.m_bbox      = AABBox(ScaleVector(osvec.Vec3Set(-10,0,-20)), ScaleVector(osvec.Vec3Set(10,0,20)))
     -- // Red goal
-    soccerGame.m_TeamAGoal = AABBox(ScaleVector(Vec3Set(-2,0,-21)), ScaleVector(Vec3Set(2,0,-19)))
+    soccerGame.m_TeamAGoal = AABBox(ScaleVector(osvec.Vec3Set(-2,0,-21)), ScaleVector(osvec.Vec3Set(2,0,-19)))
     -- // Blue Goal
-    soccerGame.m_TeamBGoal = AABBox(ScaleVector(Vec3Set(-2,0,19)), ScaleVector(Vec3Set(2,0,21)))
+    soccerGame.m_TeamBGoal = AABBox(ScaleVector(osvec.Vec3Set(-2,0,19)), ScaleVector(osvec.Vec3Set(2,0,21)))
     -- // Make a ball
     soccerGame.m_Ball      = Ball(soccerGame.m_bbox)
 

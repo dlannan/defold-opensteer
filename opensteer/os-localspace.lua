@@ -1,5 +1,7 @@
 
-local Vec3 = require("opensteer.os-vec")
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 -- // LocalSpace is used to extend an object to include a LocalSpace class
 -- //     Which has a number of properties used in matrix operations (pos, rot and scale)
 local LocalSpace = function( obj ) 
@@ -59,7 +61,7 @@ local LocalSpace = function( obj )
     -- // transform a direction in global space to its equivalent in local space
     obj.localizeDirection = function(globalDirection) 
         -- // dot offset with local basis vectors to obtain local coordiantes
-        return Vec3Set (globalDirection.dot(obj._side), globalDirection.dot(obj._up), globalDirection.dot(obj._forward))
+        return osvec.Vec3Set (globalDirection.dot(obj._side), globalDirection.dot(obj._up), globalDirection.dot(obj._forward))
     end
 
     -- // transform a point in global space to its equivalent in local space
@@ -124,9 +126,9 @@ local LocalSpace = function( obj )
     -- // rotate 90 degrees in the direction implied by rightHanded()
     obj.localRotateForwardToSide = function(v) 
         if(obj.rightHanded()) then
-            return Vec3Set( -v.z, v.y, v.x )
+            return osvec.Vec3Set( -v.z, v.y, v.x )
         else 
-            return Vec3Set( v.z, v.y, v.x )
+            return osvec.Vec3Set( v.z, v.y, v.x )
         end
     end
 

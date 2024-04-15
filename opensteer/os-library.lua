@@ -42,7 +42,9 @@
 -- //
 -- // ----------------------------------------------------------------------------
 
-local Vec3 = require("opensteer.os-vec")
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 
 local PathIntersection = function(self) 
     self.intersect = 0
@@ -68,8 +70,8 @@ function SteerLibrary( mover )
 
         -- // random walk WanderSide and WanderUp between -1 and +1
         local speed = 12.0 * dt -- // maybe this (12) should be an argument?
-        mover.WanderSide = scalarRandomWalk(mover.WanderSide, speed, -1, 1)
-        mover.WanderUp   = scalarRandomWalk(mover.WanderUp,   speed, -1, 1)
+        mover.WanderSide = osmath.scalarRandomWalk(mover.WanderSide, speed, -1, 1)
+        mover.WanderUp   = osmath.scalarRandomWalk(mover.WanderUp,   speed, -1, 1)
 
         -- // return a pure lateral steering vector: (+/-Side) + (+/-Up)
         return (mover.side().mult(mover.WanderSide)).add(mover.up().mult(mover.WanderUp))
@@ -133,7 +135,7 @@ function SteerLibrary( mover )
         -- // the path tube and (b) we are facing in the correct direction
         if ((res.outside < 0.0) and (rightway == true)) then 
             -- // all is well, return zero steering
-            return Vec3_zero
+            return osvec.Vec3_zero
         else 
             -- // otherwise we need to steer towards a target point obtained
             -- // by adding pathDistanceOffset to our current path position
@@ -161,7 +163,7 @@ function SteerLibrary( mover )
         if (res.outside < 0.0) then
             -- // our predicted future position was in the path,
             -- // return zero steering.
-            return Vec3_zero
+            return osvec.Vec3_zero
         else 
             -- // our predicted future position was outside the path, need to
             -- // steer towards it.  Use onPath projection of futurePosition
@@ -241,7 +243,7 @@ function SteerLibrary( mover )
 
         -- // first priority is to prevent immediate interpenetration
         local separation = mover.steerToAvoidCloseNeighbors(0.0, others)
-        if (separation.neq(Vec3_zero)) then return separation end
+        if (separation.neq(osvec.Vec3_zero)) then return separation end
 
         -- // otherwise, go on to consider potential future collisions
         local steer = 0
@@ -364,7 +366,7 @@ function SteerLibrary( mover )
         mover.ourPositionAtNearestApproach = myFinal
         mover.hisPositionAtNearestApproach = otherFinal
     
-        return Vec3_distance(myFinal, otherFinal)
+        return osvec.Vec3_distance(myFinal, otherFinal)
     end
 
     -- /// XXX globals only for the sake of graphical annotation
@@ -395,7 +397,7 @@ function SteerLibrary( mover )
         end
 
         -- // otherwise return zero
-        return Vec3_zero
+        return osvec.Vec3_zero
     end
 
 
@@ -544,8 +546,8 @@ function SteerLibrary( mover )
         local forwardness = mover.forward().dot(unitOffset)
 
         local directTravelTime = distance / mover.speed()
-        local f = intervalComparison(forwardness,  -0.707, 0.707)
-        local p = intervalComparison(parallelness, -0.707, 0.707)
+        local f = osmath.intervalComparison(forwardness,  -0.707, 0.707)
+        local p = osmath.intervalComparison(parallelness, -0.707, 0.707)
 
         local timeFactor = 0 -- // to be filled in below
 
@@ -621,7 +623,7 @@ function SteerLibrary( mover )
     mover.steerForTargetSpeed = function(targetSpeed) 
         local mf = mover.maxForce()
         local speedError = targetSpeed - mover.speed()
-        return mover.forward().mult( clip(speedError, -mf, mf) )    
+        return mover.forward().mult( osmath.clip(speedError, -mf, mf) )    
     end
 
     mover.findNextIntersectionWithSphere = function( obs ) 
@@ -647,7 +649,7 @@ function SteerLibrary( mover )
 
         -- // computer line-sphere intersection parameters
         b = -2.0 * lc.z
-        c = square(lc.x) + square(lc.y) + square(lc.z) - square(obs.radius + mover.radius())
+        c = osmath.square(lc.x) + osmath.square(lc.y) + osmath.square(lc.z) - osmath.square(obs.radius + mover.radius())
         d = (b * b) - (4.0 * c)
 
         -- // when the path does not intersect the sphere

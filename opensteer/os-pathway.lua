@@ -1,4 +1,7 @@
 
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 
 -- // ----------------------------------------------------------------------------
 -- // PolylinePathway: a simple implementation of the Pathway protocol.  The path
@@ -103,7 +106,7 @@ local PolylinePathway = function()
         end
     
         -- // measure how far original point is outside the Pathway's "tube"
-        outside = Vec3_distance(onPath, point) - self.radius
+        outside = osvec.Vec3_distance(onPath, point) - self.radius
         local res = { onPath=onPath, tangent=tangent, outside=outside }
         -- // return point on path
         return res
@@ -154,7 +157,7 @@ local PolylinePathway = function()
                 remaining = remaining - self.segmentLength
             else 
                 local ratio = remaining / self.segmentLength
-                result = interpolateV(ratio, self.points[i-1], self.points[i])
+                result = osmath.interpolateV(ratio, self.points[i-1], self.points[i])
                 break
             end
         end
@@ -177,18 +180,18 @@ local PolylinePathway = function()
         if (self.segmentProjection < 0.0)  then 
             self.chosen = ep0
             self.segmentProjection = 0
-            return Vec3_distance(point, ep0)
+            return osvec.Vec3_distance(point, ep0)
         end
         if (self.segmentProjection > self.segmentLength) then 
             self.chosen = ep1
             self.segmentProjection = self.segmentLength
-            return Vec3_distance(point, ep1)
+            return osvec.Vec3_distance(point, ep1)
         end
 
         -- // otherwise nearest point is projection point on segment
         self.chosen = self.segmentNormal.mult( self.segmentProjection)
         self.chosen = self.chosen.add( ep0 )
-        return Vec3_distance (point, self.chosen)
+        return osvec.Vec3_distance (point, self.chosen)
     end
 
     -- // assessor for total path length

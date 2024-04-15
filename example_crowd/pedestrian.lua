@@ -51,7 +51,9 @@
 local tinsert = table.insert
 
 require("opensteer.os-lq")
-Vec3 = require("opensteer.os-vec")
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 SimpleVehicle = require("opensteer.os-simplevehicle")
 Pathway = require("opensteer.os-pathway")
 SphericalObstacle = require("opensteer.os-obstacle")
@@ -109,17 +111,17 @@ function getTestPath()
         local out = 2.0 * size
         local h = 0.5
         local pathPoints = {
-             Vec3Set (h+gap-out,     0,0,  h+top-out),  --// 0 a
-             Vec3Set (h+gap,         0.0,  h+top),      --// 1 b
-             Vec3Set (h+gap+(top/2), 0.0,  h+top/2),    --// 2 c
-             Vec3Set (h+gap,         0.0,  h),          --// 3 d
-             Vec3Set (h,             0.0,  h),          --// 4 e
-             Vec3Set (h,             0.0,  h+top),      --// 5 f
-             Vec3Set (h+gap,         0.0,  h+top/2)     --// 6 g
+             osvec.Vec3Set (h+gap-out,     0,0,  h+top-out),  --// 0 a
+             osvec.Vec3Set (h+gap,         0.0,  h+top),      --// 1 b
+             osvec.Vec3Set (h+gap+(top/2), 0.0,  h+top/2),    --// 2 c
+             osvec.Vec3Set (h+gap,         0.0,  h),          --// 3 d
+             osvec.Vec3Set (h,             0.0,  h),          --// 4 e
+             osvec.Vec3Set (h,             0.0,  h+top),      --// 5 f
+             osvec.Vec3Set (h+gap,         0.0,  h+top/2)     --// 6 g
         }
 
-        gObstacle1.center = interpolateV(0.2, pathPoints[1], pathPoints[2])
-        gObstacle2.center = interpolateV(0.5, pathPoints[3], pathPoints[4])
+        gObstacle1.center = osmath.interpolateV(0.2, pathPoints[1], pathPoints[2])
+        gObstacle2.center = osmath.interpolateV(0.5, pathPoints[3], pathPoints[4])
         gObstacle1.radius = 3.0
         gObstacle2.radius = 5.0
         tinsert(gObstacles, gObstacle2)
@@ -196,9 +198,9 @@ local Pedestrian = function( pd )
 
         -- // set initial position
         -- // (random point on path + random horizontal offset)
-        local d = self.path.getTotalPathLength() * frandom01()
+        local d = self.path.getTotalPathLength() * osmath.frandom01()
         local r = self.path.radius
-        local randomOffset = randomVectorOnUnitRadiusXZDisk().mult( r )
+        local randomOffset = osvec.randomVectorOnUnitRadiusXZDisk().mult( r )
 
         self.mover.setPosition(self.path.mapPathDistanceToPoint(d).add( randomOffset))
         
@@ -207,7 +209,7 @@ local Pedestrian = function( pd )
 
         -- // pick a random direction for path following (upstream or downstream)
         self.pathDirection = 1
-        if(frandom01() > 0.5) then self.pathDirection = -1 end
+        if(osmath.frandom01() > 0.5) then self.pathDirection = -1 end
 
         -- // notify proximity database that our position has changed
         self.proximityToken.updateForNewPosition( self.mover.position() )
@@ -224,10 +226,10 @@ local Pedestrian = function( pd )
         -- // reverse direction when we reach an endpoint
         if (gUseDirectedPathFollowing == true)  then
 
-            if (Vec3_distance(self.mover.position(), gEndpoint0) < self.path.radius) then
+            if (osvec.Vec3_distance(self.mover.position(), gEndpoint0) < self.path.radius) then
                 self.pathDirection = 1
             end
-            if (Vec3_distance(self.mover.position(), gEndpoint1) < self.path.radius) then 
+            if (osvec.Vec3_distance(self.mover.position(), gEndpoint1) < self.path.radius) then 
                 self.pathDirection = -1
             end
         end
@@ -248,18 +250,18 @@ local Pedestrian = function( pd )
         local leakThrough = 0.1
 
         -- // determine if obstacle avoidance is required
-        local obstacleAvoidance = Vec3_zero
-        if (leakThrough < frandom01()) then 
+        local obstacleAvoidance = osvec.Vec3_zero
+        if (leakThrough < osmath.frandom01()) then 
             local oTime = 6.0; -- // minTimeToCollision = 6 seconds
             obstacleAvoidance = self.mover.steerToAvoidObstacles(oTime, gObstacles)
         end
         
         -- // if obstacle avoidance is needed, do it
-        if (obstacleAvoidance.neq(Vec3_zero)) then
+        if (obstacleAvoidance.neq(osvec.Vec3_zero)) then
             steeringForce = steeringForce.add(obstacleAvoidance);
         end 
             -- // otherwise consider avoiding collisions with others
-            local collisionAvoidance = Vec3Set(0.0, 0.0, 0.0)
+            local collisionAvoidance = osvec.Vec3Set(0.0, 0.0, 0.0)
             local caLeadTime = 4.0
 
             -- // find all neighbors within maxRadius using proximity database
@@ -269,13 +271,13 @@ local Pedestrian = function( pd )
 
             self.neighbors = self.proximityToken.findNeighbors(self.mover.position(), maxRadius)
             
-            --if (leakThrough < frandom01()) then
+            --if (leakThrough < osmath.frandom01()) then
                 collisionAvoidance = (self.mover.steerToAvoidNeighbors(caLeadTime, self.neighbors)).mult(10.0)
 --                pprint("Avoiding.."..collisionAvoidance.x.."  "..collisionAvoidance.y.."  "..collisionAvoidance.z )
             --end
 
             -- // if collision avoidance is needed, do it
-            if (collisionAvoidance.neq(Vec3_zero)) then
+            if (collisionAvoidance.neq(osvec.Vec3_zero)) then
                 steeringForce = steeringForce.add(collisionAvoidance)
                 drawVector(self.mover.position(), steeringForce, 5.0)
             else 
@@ -343,7 +345,7 @@ function drawPath(ctx, scale, xoff, yoff)
 end
 
 local gPedestrians = {
-    center = Vec3Set(0, 0, 0),
+    center = osvec.Vec3Set(0, 0, 0),
     div = 20.0,
     diameter = 200.0, -- //XXX need better way to get this
 
@@ -360,8 +362,8 @@ local gPedestrians = {
     yoff = 0.0,
 }
 
-gPedestrians.divisions = Vec3Set(gPedestrians.div, 1.0, gPedestrians.div)
-gPedestrians.dimensions = Vec3Set(gPedestrians.diameter, gPedestrians.diameter, gPedestrians.diameter)
+gPedestrians.divisions = osvec.Vec3Set(gPedestrians.div, 1.0, gPedestrians.div)
+gPedestrians.dimensions = osvec.Vec3Set(gPedestrians.diameter, gPedestrians.diameter, gPedestrians.diameter)
 gPedestrians.GPD = LQProximityDatabase( gPedestrians.center, gPedestrians.dimensions, gPedestrians.divisions)
 
 function drawTarget( x, z, sz ) 

@@ -1,5 +1,7 @@
 
-local Vec3 = require("opensteer.os-vec")
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
 local SteerLibrary = require("opensteer.os-library")
 local LocalSpace = require("opensteer.os-localspace")
 
@@ -96,8 +98,8 @@ local SimpleVehicle = function()
         -- -- // damp out abrupt changes and oscillations in steering acceleration
         -- -- // (rate is proportional to time step, then clipped into useful range)
         if (elapsedTime > 0.0) then 
-            local smoothRate = clip(9.0 * elapsedTime, 0.15, 0.4)
-            self._smoothedAcceleration = blendIntoAccumulatorV(smoothRate, newAcceleration, self._smoothedAcceleration)
+            local smoothRate = osmath.clip(9.0 * elapsedTime, 0.15, 0.4)
+            self._smoothedAcceleration = osmath.blendIntoAccumulatorV(smoothRate, newAcceleration, self._smoothedAcceleration)
         end
 
         -- -- // Euler integrate (per frame) acceleration into velocity
@@ -121,7 +123,7 @@ local SimpleVehicle = function()
         self.measurePathCurvature(elapsedTime)
     
         -- -- // running average of recent positions
-        self._smoothedPosition = blendIntoAccumulatorV(elapsedTime * 0.06, self.position(), self._smoothedPosition)
+        self._smoothedPosition = osmath.blendIntoAccumulatorV(elapsedTime * 0.06, self.position(), self._smoothedPosition)
     end 
 
     -- -- // the default version: keep FORWARD parallel to velocity, change
@@ -137,7 +139,7 @@ local SimpleVehicle = function()
     self.regenerateLocalSpaceForBanking = function( newVelocity, elapsedTime ) 
         -- // the length of this global-upward-pointing vector controls the vehicle's
         -- // tendency to right itself as it is rolled over from turning acceleration
-        local globalUp = Vec3Set(0, 0.2, 0);
+        local globalUp = osvec.Vec3Set(0, 0.2, 0);
 
         -- // acceleration points toward the center of local path curvature, the
         -- // length determines how much the vehicle will roll while turning
@@ -149,7 +151,7 @@ local SimpleVehicle = function()
         -- // blend bankUp into vehicle's UP basis vector
         local smoothRate = elapsedTime * 3;
         local tempUp = self.up();
-        tempUp = blendIntoAccumulatorV(smoothRate, bankUp, tempUp);
+        tempUp = osmath.blendIntoAccumulatorV(smoothRate, bankUp, tempUp);
         self.localspace.setUp(tempUp.normalize());
 
     -- //  annotationLine (position(), position() + (globalUp * 4), gWhite);  -- // XXX
@@ -168,17 +170,17 @@ local SimpleVehicle = function()
     self.adjustRawSteeringForce = function( force, deltaTime ) 
 
         local maxAdjustedSpeed = 0.2 * self.maxSpeed();
-        if ((self.speed() > maxAdjustedSpeed) or force.eq(Vec3_zero) ) then 
+        if ((self.speed() > maxAdjustedSpeed) or force.eq(osvec.Vec3_zero) ) then 
             return force
         else 
             local range = self.speed() / maxAdjustedSpeed
-            -- // const float cosine = interpolate (pow (range, 6), 1.0f, -1.0f)
-            -- // const float cosine = interpolate (pow (range, 10), 1.0f, -1.0f)
-            -- // const float cosine = interpolate (pow (range, 20), 1.0f, -1.0f)
-            -- // const float cosine = interpolate (pow (range, 100), 1.0f, -1.0f)
-            -- // const float cosine = interpolate (pow (range, 50), 1.0f, -1.0f)
-            local cosine = interpolate(math.pow (range, 20), 1.0, -1.0)
-            return limitMaxDeviationAngle (force, cosine, self.forward())
+            -- // const float cosine = osmath.interpolate (pow (range, 6), 1.0f, -1.0f)
+            -- // const float cosine = osmath.interpolate (pow (range, 10), 1.0f, -1.0f)
+            -- // const float cosine = osmath.interpolate (pow (range, 20), 1.0f, -1.0f)
+            -- // const float cosine = osmath.interpolate (pow (range, 100), 1.0f, -1.0f)
+            -- // const float cosine = osmath.interpolate (pow (range, 50), 1.0f, -1.0f)
+            local cosine = osmath.interpolate(math.pow (range, 20), 1.0, -1.0)
+            return osvec.limitMaxDeviationAngle (force, cosine, self.forward())
         end        
     end
 
@@ -204,20 +206,20 @@ local SimpleVehicle = function()
     self.smoothedCurvature = function() return self._smoothedCurvature end
     self.resetSmoothedCurvature = function( value ) 
         value = value or 0
-        self._lastForward.setV( Vec3_zero )
-        self._lastPosition.setV( Vec3_zero )
+        self._lastForward.setV( osvec.Vec3_zero )
+        self._lastPosition.setV( osvec.Vec3_zero )
         self._smoothedCurvature, self._curvature = value
         return value
     end
     self.smoothedAcceleration = function() return self._smoothedAcceleration end
     self.resetSmoothedAcceleration = function(value) 
-        if(not value) then value = Vec3_zero end
+        if(not value) then value = osvec.Vec3_zero end
         self._smoothedAcceleration.setV(value)
         return self._smoothedAcceleration
     end
     self.smoothedPosition = function() return self._smoothedPosition end
     self.resetSmoothedPosition = function( value ) 
-        if(value == nil) then value = Vec3_zero end
+        if(value == nil) then value = osvec.Vec3_zero end
         self._smoothedPosition.setV(value)
         return self._smoothedPosition
     end
@@ -228,14 +230,14 @@ local SimpleVehicle = function()
     -- // set a random "2D" heading: set local Up to global Y, then effectively
     -- // rotate about it by a random angle (pick random forward, derive side).
     self.randomizeHeadingOnXZPlane = function() 
-        self.setUp(Vec3_up)
-        self.setForward(RandomUnitVectorOnXZPlane())
+        self.setUp(osvec.Vec3_up)
+        self.setForward(osvec.RandomUnitVectorOnXZPlane())
         self.setSide(self.localRotateForwardToSide(self.forward()))
     end
 
     self.setHeading = function(heading) 
         self.setUp(Vec3.up)
-        self.setForward( Vec3Set( math.cos(heading), 0.0, math.sin(heading) ))
+        self.setForward( osvec.Vec3Set( math.cos(heading), 0.0, math.sin(heading) ))
         self.setSide(self.localRotateForwardToSide(self.forward()))
     end
 
@@ -249,7 +251,7 @@ local SimpleVehicle = function()
             local sign = -1.0
             if (lateral.dot(self.side()) < 0) then sign = 1.0 end
             self._curvature = lateral.length() * sign
-            self._smoothedCurvature = blendIntoAccumulator(elapsedTime * 4.0, self._curvature, self._smoothedCurvature)
+            self._smoothedCurvature = osmath.blendIntoAccumulator(elapsedTime * 4.0, self._curvature, self._smoothedCurvature)
             self._lastForward = self.forward()
             self._lastPosition = self.position()
         end
