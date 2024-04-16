@@ -1,0 +1,25 @@
+local pathway = {
+    pathRadius = 2.0,
+    pathPointCount = 7,
+    size = 30.0,
+    top = 60.0,
+    gap = 36.0,
+    out = 60.0,
+    h = 0.5,
+    points = {
+        { 24.5, 0.0, 0.5 },
+        { 36.5, 0.0, 60.5 },
+        { 66.5, 0.0, 30.5 },
+        { 36.5, 0.0, 0.5 },
+        { 0.5, 0.0, 0.5 },
+        { 0.5, 0.0, 60.5 },
+        { 36.5, 0.0, 30.5 },
+    },
+    staticObjects = {
+        { url = "/bigobject1", radius = 3.0, },
+        { url = "/bigobject2", radius = 5.0, },
+        { url = "/smallobject1", radius = 1.0, },
+    },
+}
+
+return pathway

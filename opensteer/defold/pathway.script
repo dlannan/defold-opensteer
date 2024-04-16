@@ -1,0 +1,20 @@
+local pathway = require("opensteer.os-pathway")
+
+function init(self)
+	local example_pathway = dofile("assets/scene/example.pathway")
+end
+
+function final(self)
+end
+
+function update(self, dt)
+end
+
+function fixed_update(self, dt)
+end
+
+function on_message(self, message_id, message, sender)
+end
+
+function on_reload(self)
+end

@@ -54,12 +54,12 @@ require("opensteer.os-lq")
 local veclib = require("opensteer.os-vec")
 local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
 
-SimpleVehicle = require("opensteer.os-simplevehicle")
-pathwaylib = require("opensteer.os-pathway")
-Pathway = pathwaylib.PolylinePathway
-SphericalObstacle = require("opensteer.os-obstacle").SphericalObstacle
-lqdblib = require("opensteer.os-proximity")
-LQProximityDatabase = lqdblib.LQProximityDatabase
+local SimpleVehicle = require("opensteer.os-simplevehicle")
+local pathwaylib = require("opensteer.os-pathway")
+local Pathway = pathwaylib.PolylinePathway
+local SphericalObstacle = require("opensteer.os-obstacle").SphericalObstacle
+local lqdblib = require("opensteer.os-proximity")
+local LQProximityDatabase = lqdblib.LQProximityDatabase
 
 local debugdraw_modes = {}
 debugdraw_modes[1] = require("debug-draw.debug-draw")
@@ -83,14 +83,14 @@ end
 -- // Test the OpenSteer pedestrian demo.
 -- //    - start testing as soon as document loaded. Include this to test.
 
-gTestPath = nil
+-- gTestPath = nil
 
-gObstacle1 = SphericalObstacle()
-gObstacle2 = SphericalObstacle()
-gObstacles = {}
+-- gObstacle1 = SphericalObstacle()
+-- gObstacle2 = SphericalObstacle()
+-- gObstacles = {}
 
-gEndpoint0 = Vec3()
-gEndpoint1 = Vec3()
+-- gEndpoint0 = Vec3()
+-- gEndpoint1 = Vec3()
 gUseDirectedPathFollowing = true
 
 -- // this was added for debugging tool, but I might as well leave it in
@@ -137,7 +137,7 @@ function getTestPath()
     return gTestPath
 end
 
-local Pedestrian = function( pd ) 
+local Pedestrian = function( pd, pathway ) 
 
     local self = {}
     -- // allocate one and share amoung instances just to save memory usage
@@ -178,7 +178,7 @@ local Pedestrian = function( pd )
     end
 
     -- // reset all instance state
-    self.reset = function() 
+    self.reset = function( ) 
 
         self.newToken( pd )
 
@@ -196,7 +196,7 @@ local Pedestrian = function( pd )
         self.mover.setRadius(0.5) -- // width = 0.7, add 0.3 margin, take half
 
         -- // set the path for this Pedestrian to follow
-        self.path = getTestPath()
+        self.path = pathway.pathway
 
         -- // set initial position
         -- // (random point on path + random horizontal offset)
@@ -228,10 +228,10 @@ local Pedestrian = function( pd )
         -- // reverse direction when we reach an endpoint
         if (gUseDirectedPathFollowing == true)  then
 
-            if (osvec.Vec3_distance(self.mover.position(), gEndpoint0) < self.path.radius) then
+            if (osvec.Vec3_distance(self.mover.position(), self.path.endpoint0) < self.path.radius) then
                 self.pathDirection = 1
             end
-            if (osvec.Vec3_distance(self.mover.position(), gEndpoint1) < self.path.radius) then 
+            if (osvec.Vec3_distance(self.mover.position(), self.path.endpoint1) < self.path.radius) then 
                 self.pathDirection = -1
             end
         end
@@ -255,7 +255,7 @@ local Pedestrian = function( pd )
         local obstacleAvoidance = osvec.Vec3_zero
         if (leakThrough < osmath.frandom01()) then 
             local oTime = 6.0; -- // minTimeToCollision = 6 seconds
-            obstacleAvoidance = self.mover.steerToAvoidObstacles(oTime, gObstacles)
+            obstacleAvoidance = self.mover.steerToAvoidObstacles(oTime, pathway.obstacles)
         end
         
         -- // if obstacle avoidance is needed, do it
@@ -313,7 +313,7 @@ local Pedestrian = function( pd )
     
     end
 
-    self.reset()
+    self.reset( )
     return self
 end
 
@@ -322,21 +322,17 @@ function drawObstacle( ctx, x, z, scale, r)
     debugdraw.circle(x, z, scale * r, debugdraw.COLORS.orange)
 end
 
-function drawPath(ctx, scale, xoff, yoff) 
+function drawPath(ctx, path, scale, xoff, yoff) 
 
-    local ct = 0
-    local lastpt = nil
+    for k, obj in ipairs(path.obstacles) do
+        local x = obj.center.x * scale + scale * xoff
+        local z = obj.center.z * scale + scale * yoff
+        drawObstacle(ctx, x, z, scale, obj.radius)
+    end
 
-    local x = gObstacle1.center.x * scale + scale * xoff
-    local z = gObstacle1.center.z * scale + scale * yoff
-    drawObstacle(ctx, x, z, scale, gObstacle1.radius)
-    x = gObstacle2.center.x * scale + scale * xoff
-    z = gObstacle2.center.z * scale + scale * yoff
-    drawObstacle(ctx, x, z, scale, gObstacle2.radius)
-
-    for idx = 1, #gTestPath.points -1 do
-        local pt = gTestPath.points[idx]
-        local pt2 = gTestPath.points[idx+1]
+    for idx = 1, #path.pathway.points -1 do
+        local pt = path.pathway.points[idx]
+        local pt2 = path.pathway.points[idx+1]
         local x = pt.x * scale + scale * xoff
         local z = pt.z * scale + scale * yoff
         local nx = pt2.x * scale + scale * xoff
@@ -390,7 +386,7 @@ end
 function addPedestrianToCrowd() 
 
     gPedestrians.population = gPedestrians.population + 1
-    local pedestrian = Pedestrian( gPedestrians.GPD )
+    local pedestrian = Pedestrian( gPedestrians.GPD, gPedestrians.pathway )
     tinsert(gPedestrians.crowd, pedestrian)
 end
 
@@ -402,7 +398,7 @@ function pedestrianUpdater(dt)
     gPedestrians.elapsedTime = dt
     gPedestrians.currentTime = gPedestrians.currentTime + dt
     
-    drawPath(gPedestrians.ctx, gPedestrians.scale, gPedestrians.xoff, gPedestrians.yoff)
+    drawPath(gPedestrians.ctx, gPedestrians.pathway, gPedestrians.scale, gPedestrians.xoff, gPedestrians.yoff)
 
     -- // update each Pedestrian
     for i, person in ipairs(gPedestrians.crowd) do
@@ -433,6 +429,8 @@ function pedestrianSetup(max_pedestrians)
     debugdraw.ray(v1 + vmath.vector3(-d, 0.0, -d), v1 + vmath.vector3(-d, 0.0, d), color)
 
     -- // create the specified number of Pedestrians
+    local example_pathway = dofile("assets/scene/example.pathway")
+    gPedestrians.pathway = pathwaylib.BuildPathway( example_pathway, gPedestrians.scale )
     gPedestrians.population = 0
     for i = 1, max_pedestrians do
         addPedestrianToCrowd()

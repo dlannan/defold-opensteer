@@ -2,6 +2,7 @@
 local veclib = require("opensteer.os-vec")
 local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
 
+local SphericalObstacle = require("opensteer.os-obstacle").SphericalObstacle
 
 -- // ----------------------------------------------------------------------------
 -- // PolylinePathway: a simple implementation of the Pathway protocol.  The path
@@ -9,7 +10,6 @@ local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
 -- // radius defines a volume for the path which is the union of a sphere at each
 -- // point and a cylinder along each segment.
 local pathway = {
-
 
     PolylinePathway = function() 
 
@@ -205,9 +205,32 @@ local pathway = {
 -- // construct a PolylinePathway given the number of points (vertices),
 -- // an array of points, and a path radius.
 pathway.PolylinePathway1 = function(_pointCount, _points, _radius, _cyclic) 
-    local pw = pathwaylib.PolylinePathway()
+    local pw = pathway.PolylinePathway()
     pw.initialize (_pointCount, _points, _radius, _cyclic)
     return pw
+end
+
+pathway.BuildPathway = function(data, scale)
+
+    data.pathPoints = {}
+    for k, pt in ipairs(data.points) do 
+        data.pathPoints[k] = osvec.Vec3Set(pt[1], pt[2], pt[3])
+    end
+
+    data.obstacles = {}
+    for k, objs in ipairs(data.staticObjects) do
+        
+        data.obstacles[k] = SphericalObstacle()
+        local vpos = go.get_world_position(objs.url)
+        data.obstacles[k].center = osvec.Vec3Set(vpos.x / scale, vpos.y / scale, vpos.z / scale)
+        data.obstacles[k].radius = objs.radius
+    end
+
+    data.pathway = pathway.PolylinePathway1(data.pathPointCount, data.pathPoints, data.pathRadius, false)
+    data.pathway.endpoint0 = data.pathway.points[1]
+    data.pathway.endpoint1 = data.pathway.points[data.pathPointCount]
+
+    return data
 end
 
 return pathway
