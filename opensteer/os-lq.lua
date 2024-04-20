@@ -265,7 +265,7 @@ function lqInitDatabase (lq, originx, originy, originz, sizex, sizey, sizez, div
         lq.bins[i] = nil
     end 
 
-    lq.other = nil
+    lq.other = {}
 end
 
 
@@ -290,12 +290,12 @@ function lqBinForLocation (lq, x, y, z)
     local i, ix, iy, iz = nil, nil, nil, nil
 
     -- // if point outside super-brick, return the "other" bin 
-    if (x < lq.originx) then              return (lq.other) end
-    if (y < lq.originy) then              return (lq.other) end
-    if (z < lq.originz) then              return (lq.other) end
-    if (x >= lq.originx + lq.sizex) then return (lq.other) end
-    if (y >= lq.originy + lq.sizey) then return (lq.other) end
-    if (z >= lq.originz + lq.sizez) then return (lq.other) end
+    -- if (x < lq.originx) then              return (lq.other) end
+    -- if (y < lq.originy) then              return (lq.other) end
+    -- if (z < lq.originz) then              return (lq.other) end
+    -- if (x >= lq.originx + lq.sizex) then return (lq.other) end
+    -- if (y >= lq.originy + lq.sizey) then return (lq.other) end
+    -- if (z >= lq.originz + lq.sizez) then return (lq.other) end
 
     -- // if point inside super-brick, compute the bin coordinates 
     ix = (((x - lq.originx) / lq.sizex) * lq.divx) or 0
@@ -386,7 +386,7 @@ function lqUpdateForNewLocation(lq, object, x, y, z)
     object.y = y
     object.z = z
 
-    local newBin = lq.bins[idx]
+    local newBin = lq.bins[idx] or nil
 
     -- // has object moved into a new bin? 
     if(newBin == nil) then
