@@ -37,6 +37,26 @@ instances {
     z: 1.0
   }
 }
+instances {
+  id: "car_player"
+  prototype: "/example_chase/car_player.go"
+  position {
+    x: 0.0
+    y: 0.1
+    z: 0.0
+  }
+  rotation {
+    x: 0.70710677
+    y: 0.0
+    z: 0.0
+    w: 0.70710677
+  }
+  scale3 {
+    x: 0.1
+    y: 0.1
+    z: 0.1
+  }
+}
 scale_along_z: 0
 embedded_instances {
   id: "camera"
@@ -66,14 +86,14 @@ embedded_instances {
   ""
   position {
     x: 0.0
-    y: 200.0
+    y: 140.0
     z: 0.0
   }
   rotation {
-    x: -0.70971835
-    y: -0.08742477
-    z: -0.07066497
-    w: 0.695459
+    x: -0.70710677
+    y: 0.0
+    z: 0.0
+    w: 0.70710677
   }
   scale3 {
     x: 1.0
@@ -135,7 +155,7 @@ embedded_instances {
   }
 }
 embedded_instances {
-  id: "people"
+  id: "cars"
   data: "components {\n"
   "  id: \"chase\"\n"
   "  component: \"/example_chase/chase.script\"\n"
@@ -154,28 +174,9 @@ embedded_instances {
   "  }\n"
   "}\n"
   "embedded_components {\n"
-  "  id: \"people_men\"\n"
+  "  id: \"chasers\"\n"
   "  type: \"factory\"\n"
-  "  data: \"prototype: \\\"/example_crowd/male.go\\\"\\n"
-  "load_dynamically: false\\n"
-  "dynamic_prototype: false\\n"
-  "\"\n"
-  "  position {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "  }\n"
-  "  rotation {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "    w: 1.0\n"
-  "  }\n"
-  "}\n"
-  "embedded_components {\n"
-  "  id: \"people_women\"\n"
-  "  type: \"factory\"\n"
-  "  data: \"prototype: \\\"/example_crowd/female.go\\\"\\n"
+  "  data: \"prototype: \\\"/example_chase/car_chaser.go\\\"\\n"
   "load_dynamically: false\\n"
   "dynamic_prototype: false\\n"
   "\"\n"
@@ -210,9 +211,9 @@ embedded_instances {
   }
 }
 embedded_instances {
-  id: "soldier_obj"
-  children: "go"
-  children: "soldier_cam"
+  id: "player"
+  children: "car_player"
+  children: "player_cam"
   data: ""
   position {
     x: 0.0
@@ -232,56 +233,7 @@ embedded_instances {
   }
 }
 embedded_instances {
-  id: "go"
-  data: "embedded_components {\n"
-  "  id: \"model\"\n"
-  "  type: \"model\"\n"
-  "  data: \"mesh: \\\"/builtins/assets/meshes/sphere.dae\\\"\\n"
-  "skeleton: \\\"\\\"\\n"
-  "animations: \\\"\\\"\\n"
-  "default_animation: \\\"\\\"\\n"
-  "name: \\\"{{NAME}}\\\"\\n"
-  "materials {\\n"
-  "  name: \\\"default\\\"\\n"
-  "  material: \\\"/assets/materials/model.material\\\"\\n"
-  "  textures {\\n"
-  "    sampler: \\\"tex0\\\"\\n"
-  "    texture: \\\"/assets/images/sphere.png\\\"\\n"
-  "  }\\n"
-  "}\\n"
-  "\"\n"
-  "  position {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "  }\n"
-  "  rotation {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "    w: 1.0\n"
-  "  }\n"
-  "}\n"
-  ""
-  position {
-    x: 0.0
-    y: 0.0
-    z: 0.1
-  }
-  rotation {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    w: 1.0
-  }
-  scale3 {
-    x: 120.0
-    y: 120.0
-    z: 0.1
-  }
-}
-embedded_instances {
-  id: "soldier_cam"
+  id: "player_cam"
   data: "embedded_components {\n"
   "  id: \"camera\"\n"
   "  type: \"camera\"\n"

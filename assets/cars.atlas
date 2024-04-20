@@ -1,0 +1,62 @@
+images {
+  image: "/assets/images/cars_crim01.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_crim02.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_crim03.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_crim04.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_crim05.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_player01.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_player02.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_player03.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_player04.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_police01.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_police02.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_van01.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_van02.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/images/cars_van03.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+margin: 0
+extrude_borders: 0
+inner_padding: 0
+max_page_width: 0
+max_page_height: 0
+rename_patterns: ""

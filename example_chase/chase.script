@@ -62,12 +62,17 @@ function init(self)
 	local pursuerCount = 30
 	for i = 1, pursuerCount do 
 		local new_chaser = MpPursuer(gChasers.GPD, self.wanderer)
+		local pos = new_chaser.mover.position()
+		local p = vmath.vector3( pos.x, pos.y, pos.z )
+		new_chaser.car = factory.create("/cars#chasers", p, nil, { health = 10 }, 1.0)
+		
 		tinsert( self.allMP, new_chaser)
 	end
 
 	-- // initialize camera
 	self.selectedVehicle = self.wanderer
 	self.debug = 0
+	self.turnSpeed = 5.0
 end
 
 function final(self)
@@ -93,11 +98,30 @@ function update(self, dt)
 	self.wanderer.update (self.currentTime, self.elapsedTime)
 	
 	local pos = self.wanderer.mover.position() 
-	go.set_position(vmath.vector3(pos.x * 10.0, self.cam_pos.y, pos.z * 10.0), "/camera")
-	
+	local campos = vmath.vector3(pos.x * 10.0, self.cam_pos.y, pos.z * 10.0)
+	go.set_position(campos, "/camera")
+	local carpos = vmath.vector3(pos.x * 10.0, 0.0, pos.z * 10.0)
+	go.set_position(carpos, "/player")
+
+	local fwd = self.wanderer.mover.forward()
+	local angle = math.atan2(fwd.z, fwd.x)
+	local rot = vmath.quat_rotation_y( -angle + math.pi * 0.5 )
+	local newrot = vmath.slerp(dt * self.turnSpeed, go.get_rotation("/player"), rot )
+	go.set_rotation( newrot, "/player")
+		
 	-- // update each pursuer
 	for k,v in ipairs(self.allMP) do
 		v.update(self.currentTime, self.elapsedTime)
+
+		local pos = v.mover.position() 
+		local carpos = vmath.vector3(pos.x * 10.0, 0.0, pos.z * 10.0)
+		go.set_position(carpos, v.car)
+
+		local fwd =v.mover.forward()
+		local angle = math.atan2(fwd.z, fwd.x)
+		local rot = vmath.quat_rotation_y( -angle + math.pi * 0.5 )
+		local newrot = vmath.slerp(dt * self.turnSpeed, go.get_rotation(v.car), rot )
+		go.set_rotation( newrot, v.car)
 	end 
 
 	redraw(self, self.currentTime, self.elapsedTime)
