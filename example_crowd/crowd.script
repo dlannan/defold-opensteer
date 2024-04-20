@@ -1,6 +1,8 @@
 
 local peds = require("example_crowd.pedestrian")
-local debugdrawing = peds.debugdraw_modes[1]
+
+local osdebug = require("opensteer.os-debug")
+local debugdrawing = osdebug.debugdraw_modes[1]
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
@@ -94,7 +96,7 @@ function on_input(self, action_id, action)
 
 	if(action_id == hash("toggle_debug") and action.released ) then 
 		self.debug = 1 - self.debug
-		peds.debugEnable(self.debug)
+		osdebug.debugEnable(self.debug)
 		print(self.debug)
 	end
 		

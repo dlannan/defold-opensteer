@@ -1,0 +1,119 @@
+local tinsert = table.insert
+
+local osdebug = require("opensteer.os-debug")
+
+local veclib = require("opensteer.os-vec")
+local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
+
+local mchase = require("example_chase.multichase")
+local MpWanderer, MpPursuer = mchase.MpWanderer, mchase.MpPursuer
+
+local lqdblib = require("opensteer.os-proximity")
+local LQProximityDatabase = lqdblib.LQProximityDatabase
+
+local gChasers = {
+    center = osvec.Vec3Set(0, 0, 0),
+    div = 20.0,
+    diameter = 200.0, -- //XXX need better way to get this
+
+    population = 0,
+    crowd = {},
+
+    oldTime = 0,
+    currentTime = 0,
+    elapsedTime = 0,
+
+    ctx = nil,
+    scale = 10.0,
+    xoff = 0.0,
+    yoff = 0.0,
+}
+
+gChasers.divisions = osvec.Vec3Set(gChasers.div, 1.0, gChasers.div)
+gChasers.dimensions = osvec.Vec3Set(gChasers.diameter, gChasers.diameter, gChasers.diameter)
+gChasers.GPD = LQProximityDatabase( gChasers.center, gChasers.dimensions, gChasers.divisions)
+
+local function reset(self)
+
+	-- // reset wanderer and pursuers
+	self.wanderer.reset()
+	for k,v in ipairs(self.allMP) do
+		v.reset()
+	end
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	msg.post("@render:", "use_camera_projection")
+	msg.post("/camera#camera", "acquire_camera_focus")
+
+	osdebug.scale = 10.0
+	self.cam_pos = go.get_world_position("/camera")
+
+	self.currentTime = 0.0 
+	self.elapsedTime = 0.0
+	self.allMP = {}
+
+	-- // create the wanderer, saving a pointer to it
+	self.wanderer = MpWanderer()
+	-- table.insert(self.allMP, wanderer)
+
+	-- // create the specified number of pursuers, save pointers to them
+	local pursuerCount = 30
+	for i = 1, pursuerCount do 
+		local new_chaser = MpPursuer(gChasers.GPD, self.wanderer)
+		tinsert( self.allMP, new_chaser)
+	end
+
+	-- // initialize camera
+	self.selectedVehicle = self.wanderer
+	self.debug = 0
+end
+
+function final(self)
+	self.allMP = nil 
+	self.wanderer = nil
+end
+
+local function redraw(self, currentTime, elapsedTime)
+
+	self.wanderer.draw()
+
+	-- // draw each vehicles
+	for k,v in ipairs(self.allMP) do
+		v.draw()
+	end 
+end 	
+
+
+function update(self, dt)
+	
+	self.elapsedTime = dt 
+	-- // update the wanderer
+	self.wanderer.update (self.currentTime, self.elapsedTime)
+	
+	local pos = self.wanderer.mover.position() 
+	go.set_position(vmath.vector3(pos.x * 10.0, self.cam_pos.y, pos.z * 10.0), "/camera")
+	
+	-- // update each pursuer
+	for k,v in ipairs(self.allMP) do
+		v.update(self.currentTime, self.elapsedTime)
+	end 
+
+	redraw(self, self.currentTime, self.elapsedTime)
+
+	self.currentTime = self.currentTime + dt
+end
+
+function on_input(self, action_id, action)
+
+	if(action_id == hash("toggle_debug") and action.released ) then 
+		self.debug = 1 - self.debug
+		osdebug.debugEnable(self.debug)
+		print(self.debug)
+	end
+end
+
+function on_reload(self)
+	reset(self)
+end

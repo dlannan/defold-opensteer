@@ -272,9 +272,11 @@ end
 -- // ------------------------------------------------------------------ 
 -- // Determine index into linear bin array given 3D bin indices 
 
-
 function lqBinCoordsToBinIndex(lq, ix, iy, iz) 
-    return math.floor((ix * lq.divy * lq.divz) + (iy * lq.divz) + iz)
+    ix = math.floor(ix) 
+    iy = math.floor(iy) 
+    iz = math.floor(iz) 
+    return (ix * lq.divy * lq.divz) + (iy * lq.divz) + iz
 end
 
 
@@ -439,22 +441,21 @@ function lqMapOverAllObjectsInLocalityClipped ( lq, x, y, z, radius, func, clien
     local i, j, k = nil, nil, nil
     local iindex, jindex, kindex = nil, nil, nil
 
-    local slab = lq.divy * lq.divz
-    local row = lq.divz
-
     minBinX = math.floor(minBinX)
     minBinY = math.floor(minBinY)
-    minBinZ = math.floor(minBinZ)    
+    minBinZ = math.floor(minBinZ)
     maxBinX = math.floor(maxBinX)
     maxBinY = math.floor(maxBinY)
-    maxBinZ = math.floor(maxBinZ)    
-    
-    local istart = math.floor(minBinX * slab)
-    local jstart = math.floor(minBinY * row)
-    local kstart = math.floor(minBinZ)
+    maxBinZ = math.floor(maxBinZ)
 
-    local co
-    local bin
+    local slab = lq.divy * lq.divz
+    local row = lq.divz
+ 
+    local istart = (minBinX * slab)
+    local jstart = (minBinY * row)
+    local kstart = (minBinZ)
+
+    local co = 0
     local radiusSquared = radius * radius
 
     -- // loop for x bins across diameter of sphere 
@@ -518,14 +519,14 @@ end
 
 function lqMapOverAllObjectsInLocality( lq, x, y, z, radius, func, clientQueryState) 
 
-    local minBinX, minBinY, minBinZ, maxBinX, maxBinY, maxBinZ = nil
+    local minBinX, minBinY, minBinZ, maxBinX, maxBinY, maxBinZ = nil, nil, nil, nil, nil
     local partlyOut = 0
     local completelyOutside = ((x + radius) < lq.originx) or ((y + radius) < lq.originy) or ((z + radius) < lq.originz)
     completelyOutside = completelyOutside or ((x - radius) >= lq.originx + lq.sizex) or ((y - radius) >= lq.originy + lq.sizey) or ((z - radius) >= lq.originz + lq.sizez)
 
     -- // is the sphere completely outside the "super brick"? 
     if(completelyOutside == true) then
-        -- //console.log("Outside super brick??????")
+        -- print("Outside super brick??????")
         lqMapOverAllOutsideObjects (lq, x, y, z, radius, func, clientQueryState)
         return
     end
@@ -548,13 +549,13 @@ function lqMapOverAllObjectsInLocality( lq, x, y, z, radius, func, clientQuerySt
 
     -- // map function over outside objects if necessary (if clipped) 
     if (partlyOut == 1) then
-        -- //console.log("Partly out")
+        -- print("Partly out")
         lqMapOverAllOutsideObjects (lq, x, y, z, radius, func, clientQueryState)
     end
 
     -- //console.log("Map over objects")
     -- // map function over objects in bins 
-    lqMapOverAllObjectsInLocalityClipped (lq, x, y, z, radius, func, clientQueryState, minBinX, minBinY, minBinZ, maxBinX, maxBinY, maxBinZ)
+    lqMapOverAllObjectsInLocalityClipped(lq, x, y, z, radius, func, clientQueryState, minBinX, minBinY, minBinZ, maxBinX, maxBinY, maxBinZ)
 end
 
 

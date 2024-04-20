@@ -1,25 +1,5 @@
 name: "crowd"
 instances {
-  id: "pathway"
-  prototype: "/opensteer/defold/pathway.go"
-  position {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-  }
-  rotation {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    w: 1.0
-  }
-  scale3 {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-  }
-}
-instances {
   id: "illumination"
   prototype: "/illumination/illumination.go"
   position {
@@ -86,14 +66,14 @@ embedded_instances {
   ""
   position {
     x: 0.0
-    y: 219.0
-    z: 588.0
+    y: 200.0
+    z: 0.0
   }
   rotation {
-    x: -0.29256856
-    y: -0.20677546
-    z: -0.050577477
-    w: 0.93224967
+    x: -0.70971835
+    y: -0.08742477
+    z: -0.07066497
+    w: 0.695459
   }
   scale3 {
     x: 1.0
@@ -113,10 +93,10 @@ embedded_instances {
   "name: \\\"{{NAME}}\\\"\\n"
   "materials {\\n"
   "  name: \\\"default\\\"\\n"
-  "  material: \\\"/illumination/materials/model_ground.material\\\"\\n"
+  "  material: \\\"/illumination/materials/model.material\\\"\\n"
   "  textures {\\n"
   "    sampler: \\\"DIFFUSE_TEXTURE\\\"\\n"
-  "    texture: \\\"/assets/images/Dirt 00 seamless.png\\\"\\n"
+  "    texture: \\\"/assets/images/grey.png\\\"\\n"
   "  }\\n"
   "  textures {\\n"
   "    sampler: \\\"NORMAL_TEXTURE\\\"\\n"
@@ -138,9 +118,9 @@ embedded_instances {
   "}\n"
   ""
   position {
-    x: 200.0
+    x: 0.0
     y: 0.0
-    z: 200.0
+    z: 0.0
   }
   rotation {
     x: -0.70710677
@@ -157,8 +137,8 @@ embedded_instances {
 embedded_instances {
   id: "people"
   data: "components {\n"
-  "  id: \"crowd\"\n"
-  "  component: \"/example_crowd/crowd.script\"\n"
+  "  id: \"chase\"\n"
+  "  component: \"/example_chase/chase.script\"\n"
   "  position {\n"
   "    x: 0.0\n"
   "    y: 0.0\n"

@@ -1,4 +1,3 @@
-local pathway = require("opensteer.os-pathway")
 
 function init(self)
 	local example_pathway = dofile("assets/scene/example.pathway")

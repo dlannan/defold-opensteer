@@ -42,6 +42,7 @@
 -- //
 -- // ----------------------------------------------------------------------------
 
+local osdebug = require("opensteer.os-debug")
 local veclib = require("opensteer.os-vec")
 local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
 local obstaclelib = require("opensteer.os-obstacle")
@@ -144,7 +145,7 @@ function SteerLibrary( mover )
             local targetPathDistance = nowPathDistance + pathDistanceOffset
             local target = path.mapPathDistanceToPoint(targetPathDistance)
         
-            drawTarget(target.x, target.z, 2.0)
+            osdebug.drawTarget(target.x, target.z, 2.0)
             -- pprint(target)
             
             -- // return steering to seek target on path
@@ -383,8 +384,7 @@ function SteerLibrary( mover )
 
     mover.steerToAvoidCloseNeighbors = function( minSeparationDistance, others)
         -- // for each of the other vehicles...
-        for k,v in pairs(others) do
-            local other = v
+        for k,other in pairs(others) do
             if (other.mover ~= mover)  then
                 local sumOfRadii = mover.radius() + other.mover.radius()
                 local minCenterToCenter = minSeparationDistance + sumOfRadii
@@ -527,16 +527,16 @@ function SteerLibrary( mover )
     -- // ------------------------------------------------------------------------
     -- // pursuit of another vehicle (& version with ceiling on prediction time)
 
-    mover.steerForPursuit = function( quarry)
-        return steerForPursuit (quarry, Number.MAX_VALUE)
-    end
+    -- mover.steerForPursuit = function( quarry)
+    --     return steerForPursuit (quarry, Number.MAX_VALUE)
+    -- end
 
     mover.steerForPursuit = function( quarry, maxPredictionTime ) 
-        
+
         -- // offset from this to quarry, that distance, unit vector toward quarry
         local offset = quarry.position().sub( mover.position() )
         local distance = offset.length()
-        local unitOffset = offset.dinv( distance )
+        local unitOffset = offset.div( distance )
 
         -- // how parallel are the paths of "this" and the quarry
         -- // (1 means parallel, 0 is pependicular, -1 is anti-parallel)

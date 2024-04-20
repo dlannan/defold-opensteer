@@ -50,6 +50,8 @@
 
 local tinsert = table.insert
 
+local osdebug = require("opensteer.os-debug")
+
 require("opensteer.os-lq")
 local veclib = require("opensteer.os-vec")
 local osmath, osvec, Vec3 = veclib.osmath, veclib.osvec, veclib.vec3
@@ -60,25 +62,6 @@ local Pathway = pathwaylib.PolylinePathway
 local SphericalObstacle = require("opensteer.os-obstacle").SphericalObstacle
 local lqdblib = require("opensteer.os-proximity")
 local LQProximityDatabase = lqdblib.LQProximityDatabase
-
-local debugdraw_modes = {}
-debugdraw_modes[1] = require("debug-draw.debug-draw")
-debugdraw_modes[2] = {
-    ray = function(v1, v2, col) end,
-    circle = function(x, z, r, col) end,
-    COLORS = debugdraw_modes[1].COLORS,
-    text = debugdraw_modes[1].text,
-}
-
-local debugdraw = debugdraw_modes[2]
-
-local function debugEnable(enable)
-    if(enable == 1) then 
-        debugdraw = debugdraw_modes[1]
-    else 
-        debugdraw = debugdraw_modes[2]
-    end 
-end
 
 -- // Test the OpenSteer pedestrian demo.
 -- //    - start testing as soon as document loaded. Include this to test.
@@ -281,7 +264,7 @@ local Pedestrian = function( pd, pathway )
             -- // if collision avoidance is needed, do it
             if (collisionAvoidance.neq(osvec.Vec3_zero)) then
                 steeringForce = steeringForce.add(collisionAvoidance)
-                drawVector(self.mover.position(), steeringForce, 5.0)
+                osdebug.drawVector(self.mover.position(), steeringForce, 5.0)
             else 
                 -- // add in wander component (according to user switch)
                 if (gWanderSwitch == true) then 
@@ -317,30 +300,7 @@ local Pedestrian = function( pd, pathway )
     return self
 end
 
-function drawObstacle( ctx, x, z, scale, r) 
 
-    debugdraw.circle(x, z, scale * r, debugdraw.COLORS.orange)
-end
-
-function drawPath(ctx, path, scale, xoff, yoff) 
-
-    for k, obj in ipairs(path.obstacles) do
-        local x = obj.center.x * scale + scale * xoff
-        local z = obj.center.z * scale + scale * yoff
-        drawObstacle(ctx, x, z, scale, obj.radius)
-    end
-
-    for idx = 1, #path.pathway.points -1 do
-        local pt = path.pathway.points[idx]
-        local pt2 = path.pathway.points[idx+1]
-        local x = pt.x * scale + scale * xoff
-        local z = pt.z * scale + scale * yoff
-        local nx = pt2.x * scale + scale * xoff
-        local nz = pt2.z * scale + scale * yoff
-        
-        debugdraw.ray(vmath.vector3(x, 0.0, z), vmath.vector3(nx, 0.0, nz), debugdraw.COLORS.green)
-    end
-end
 
 local gPedestrians = {
     center = osvec.Vec3Set(0, 0, 0),
@@ -364,25 +324,6 @@ gPedestrians.divisions = osvec.Vec3Set(gPedestrians.div, 1.0, gPedestrians.div)
 gPedestrians.dimensions = osvec.Vec3Set(gPedestrians.diameter, gPedestrians.diameter, gPedestrians.diameter)
 gPedestrians.GPD = LQProximityDatabase( gPedestrians.center, gPedestrians.dimensions, gPedestrians.divisions)
 
-function drawTarget( x, z, sz ) 
-    
-    local x = x * gPedestrians.scale + gPedestrians.scale * gPedestrians.xoff
-    local z = z * gPedestrians.scale + gPedestrians.scale * gPedestrians.yoff
-
-    debugdraw.ray(vmath.vector3(x-gPedestrians.scale*sz, 0.0, z), vmath.vector3(x+gPedestrians.scale*sz, 0.0, z), debugdraw.COLORS.white)
-    debugdraw.ray(vmath.vector3(x, 0.0, z-gPedestrians.scale*sz), vmath.vector3(x, 0.0, z+gPedestrians.scale*sz), debugdraw.COLORS.white)
-end
-
-function drawVector( p, v, sz ) 
-    
-    local x = p.x * gPedestrians.scale + gPedestrians.scale * gPedestrians.xoff
-    local z = p.z * gPedestrians.scale + gPedestrians.scale * gPedestrians.yoff
-    local vx = (p.x + v.x * sz) * gPedestrians.scale + gPedestrians.scale * gPedestrians.xoff
-    local vz = (p.z + v.z * sz) * gPedestrians.scale + gPedestrians.scale * gPedestrians.yoff
-
-    debugdraw.ray(vmath.vector3(x, 0.0, z), vmath.vector3(vx, 0.0, vz), debugdraw.COLORS.yellow)
-end
-
 function addPedestrianToCrowd() 
 
     gPedestrians.population = gPedestrians.population + 1
@@ -398,7 +339,7 @@ function pedestrianUpdater(dt)
     gPedestrians.elapsedTime = dt
     gPedestrians.currentTime = gPedestrians.currentTime + dt
     
-    drawPath(gPedestrians.ctx, gPedestrians.pathway, gPedestrians.scale, gPedestrians.xoff, gPedestrians.yoff)
+    osdebug.drawPath(gPedestrians.ctx, gPedestrians.pathway, gPedestrians.scale, gPedestrians.xoff, gPedestrians.yoff)
 
     -- // update each Pedestrian
     for i, person in ipairs(gPedestrians.crowd) do
@@ -408,25 +349,27 @@ function pedestrianUpdater(dt)
 
         local x = pos.x * gPedestrians.scale + gPedestrians.scale * gPedestrians.xoff
         local z = pos.z * gPedestrians.scale + gPedestrians.scale * gPedestrians.yoff
-        debugdraw.circle(x, z, gPedestrians.scale, debugdraw.COLORS.red)
+        osdebug.debugdraw.circle(x, z, gPedestrians.scale, osdebug.debugdraw.COLORS.red)
     end
 end
 
 function pedestrianSetup(max_pedestrians)
 
-    debugdraw.circle(0, 0, 20.0, debugdraw.COLORS.orange)
+    osdebug.init(gPedestrians.scale, gPedestrians.xoff, gPedestrians.yoff)
+
+    osdebug.drawCircle(0, 0, 20.0, osdebug.debugdraw.COLORS.orange)
     max_pedestrians = max_pedestrians or 100
     pprint("Testing OpenSteer Pedestrians: "..max_pedestrians)
     -- pprint("LQDB:", gPedestrians.GPD)
 
     local v1 = vmath.vector3(gPedestrians.center.x, gPedestrians.center.y, gPedestrians.center.z)
     local d = gPedestrians.diameter
-    local color = debugdraw.COLORS.blue
+    local color = osdebug.debugdraw.COLORS.blue
     
-    debugdraw.ray(v1 + vmath.vector3(-d, 0.0, -d), v1 + vmath.vector3(d, 0.0, -d), color)
-    debugdraw.ray(v1 + vmath.vector3(-d, 0.0, d), v1 + vmath.vector3(d, 0.0, d), color)
-    debugdraw.ray(v1 + vmath.vector3(d, 0.0, -d), v1 + vmath.vector3(d, 0.0, d), color)
-    debugdraw.ray(v1 + vmath.vector3(-d, 0.0, -d), v1 + vmath.vector3(-d, 0.0, d), color)
+    osdebug.debugdraw.ray(v1 + vmath.vector3(-d, 0.0, -d), v1 + vmath.vector3(d, 0.0, -d), color)
+    osdebug.debugdraw.ray(v1 + vmath.vector3(-d, 0.0, d), v1 + vmath.vector3(d, 0.0, d), color)
+    osdebug.debugdraw.ray(v1 + vmath.vector3(d, 0.0, -d), v1 + vmath.vector3(d, 0.0, d), color)
+    osdebug.debugdraw.ray(v1 + vmath.vector3(-d, 0.0, -d), v1 + vmath.vector3(-d, 0.0, d), color)
 
     -- // create the specified number of Pedestrians
     local example_pathway = dofile("assets/scene/example.pathway")

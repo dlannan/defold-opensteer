@@ -2,6 +2,9 @@
 main_collection = /example_crowd/crowd.collectionc
 render = /builtins/render/default.renderc
 
+[input]
+game_binding = /input/game.input_bindingc
+
 [script]
 shared_state = 1
 
@@ -18,6 +21,7 @@ package = com.kakutai.wildvfarm
 title = opensteer
 custom_resources = /assets/
 compress_archive = 0
+dependencies = 
 
 [render]
 clear_color_red = 0.5176
@@ -29,4 +33,7 @@ max_instances = 8192
 
 [graphics]
 verify_graphics_calls = 0
+
+[physics]
+type = 3D
 

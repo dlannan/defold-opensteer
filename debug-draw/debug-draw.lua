@@ -27,6 +27,7 @@ local M = {}
 M.COLORS = {
 	white = vmath.vector4(1),
 	black = vmath.vector4(0, 0, 0, 1),
+	grey = vmath.vector4(0.75, 0.75, 0.75, 0.75),
 	red = vmath.vector4(1, 0, 0, 1),
 	cyan = vmath.vector4(0, 1, 1, 1),
 	yellow = vmath.vector4(1, 1, 0, 1),
