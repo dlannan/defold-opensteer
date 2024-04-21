@@ -64,7 +64,7 @@ function init(self)
 		local new_chaser = MpPursuer(gChasers.GPD, self.wanderer)
 		local pos = new_chaser.mover.position()
 		local p = vmath.vector3( pos.x, pos.y, pos.z )
-		new_chaser.car = factory.create("/cars#chasers", p, nil, { health = 10 }, 1.0)
+		new_chaser.car = factory.create("/cars#chasers", p, nil, { health = 10 }, 2.0)
 		
 		tinsert( self.allMP, new_chaser)
 	end
@@ -73,8 +73,11 @@ function init(self)
 	self.selectedVehicle = self.wanderer
 	self.debug = 0
 	self.turnSpeed = 5.0
-	-- start the effect component "particles" in the current game object
-	particlefx.play("/player#smoke")
+
+	timer.delay(0.001, false, function()
+		msg.post("@render:", "clear_color", { color = vmath.vector4(0, 0, 0, 1) } )
+	end)
+		
 end
 
 function final(self)
@@ -94,7 +97,7 @@ end
 
 
 function update(self, dt)
-	
+		
 	self.elapsedTime = dt 
 	-- // update the wanderer
 	self.wanderer.update (self.currentTime, self.elapsedTime)

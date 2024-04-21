@@ -1,33 +1,68 @@
 name: "crowd"
 instances {
-  id: "illumination"
-  prototype: "/illumination/illumination.go"
+  id: "car_player"
+  prototype: "/example_chase/car_player.go"
   position {
     x: 0.0
-    y: 394.0
+    y: 0.1
     z: 0.0
   }
   rotation {
-    x: -0.5499789
-    y: 2.1023988E-16
-    z: -3.1983448E-17
-    w: 0.83517855
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 2.0
+    y: 2.0
+    z: 2.0
+  }
+}
+instances {
+  id: "light_spot"
+  prototype: "/illumination/light_spot.go"
+  position {
+    x: 0.0
+    y: 50.0
+    z: 0.0
+  }
+  rotation {
+    x: -0.70710677
+    y: 0.0
+    z: 0.0
+    w: 0.70710677
   }
   component_properties {
-    id: "illumination"
+    id: "light"
     properties {
-      id: "ambient_level"
-      value: "0.1"
+      id: "color"
+      value: "1.0, 1.0, 1.0"
+      type: PROPERTY_TYPE_VECTOR3
+    }
+    properties {
+      id: "brightness"
+      value: "1.0"
       type: PROPERTY_TYPE_NUMBER
     }
     properties {
-      id: "sunlight_brightness"
-      value: "0.1"
+      id: "radius"
+      value: "70.0"
       type: PROPERTY_TYPE_NUMBER
     }
     properties {
-      id: "sunlight_specular"
-      value: "0.2"
+      id: "specular"
+      value: "0.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "smoothness"
+      value: "0.001"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "cutoff"
+      value: "0.3"
       type: PROPERTY_TYPE_NUMBER
     }
   }
@@ -38,23 +73,81 @@ instances {
   }
 }
 instances {
-  id: "car_player"
-  prototype: "/example_chase/car_player.go"
+  id: "illumination"
+  prototype: "/illumination/illumination.go"
   position {
     x: 0.0
-    y: 0.1
+    y: 0.0
     z: 0.0
   }
   rotation {
-    x: 0.70710677
+    x: 0.0
     y: 0.0
     z: 0.0
-    w: 0.70710677
+    w: 1.0
+  }
+  component_properties {
+    id: "illumination"
+    properties {
+      id: "ambient_color"
+      value: "0.0, 0.0, 0.0"
+      type: PROPERTY_TYPE_VECTOR3
+    }
+    properties {
+      id: "ambient_level"
+      value: "0.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "sunlight_color"
+      value: "0.0, 0.0, 0.0"
+      type: PROPERTY_TYPE_VECTOR3
+    }
+    properties {
+      id: "sunlight_brightness"
+      value: "0.1"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "sunlight_specular"
+      value: "1.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "fog"
+      value: "false"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "fog_is_radial"
+      value: "false"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "fog_distance_min"
+      value: "5.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "fog_distance_max"
+      value: "15.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "fog_color"
+      value: "0.0, 0.0, 0.0"
+      type: PROPERTY_TYPE_VECTOR3
+    }
+    properties {
+      id: "fog_level"
+      value: "0.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
   }
   scale3 {
-    x: 0.1
-    y: 0.1
-    z: 0.1
+    x: 1.0
+    y: 1.0
+    z: 1.0
   }
 }
 scale_along_z: 0
@@ -86,7 +179,7 @@ embedded_instances {
   ""
   position {
     x: 0.0
-    y: 140.0
+    y: 170.0
     z: 0.0
   }
   rotation {
@@ -99,59 +192,6 @@ embedded_instances {
     x: 1.0
     y: 1.0
     z: 1.0
-  }
-}
-embedded_instances {
-  id: "ground"
-  data: "embedded_components {\n"
-  "  id: \"model\"\n"
-  "  type: \"model\"\n"
-  "  data: \"mesh: \\\"/builtins/assets/meshes/quad.dae\\\"\\n"
-  "skeleton: \\\"\\\"\\n"
-  "animations: \\\"\\\"\\n"
-  "default_animation: \\\"\\\"\\n"
-  "name: \\\"{{NAME}}\\\"\\n"
-  "materials {\\n"
-  "  name: \\\"default\\\"\\n"
-  "  material: \\\"/illumination/materials/model.material\\\"\\n"
-  "  textures {\\n"
-  "    sampler: \\\"DIFFUSE_TEXTURE\\\"\\n"
-  "    texture: \\\"/assets/images/grey.png\\\"\\n"
-  "  }\\n"
-  "  textures {\\n"
-  "    sampler: \\\"NORMAL_TEXTURE\\\"\\n"
-  "    texture: \\\"/illumination/textures/empty.png\\\"\\n"
-  "  }\\n"
-  "}\\n"
-  "\"\n"
-  "  position {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "  }\n"
-  "  rotation {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "    w: 1.0\n"
-  "  }\n"
-  "}\n"
-  ""
-  position {
-    x: 0.0
-    y: 0.0
-    z: 0.0
-  }
-  rotation {
-    x: -0.70710677
-    y: 0.0
-    z: 0.0
-    w: 0.70710677
-  }
-  scale3 {
-    x: 1000.0
-    y: 1000.0
-    z: 1000.0
   }
 }
 embedded_instances {
@@ -213,25 +253,8 @@ embedded_instances {
 embedded_instances {
   id: "player"
   children: "car_player"
-  children: "player_cam"
-  data: "components {\n"
-  "  id: \"smoke\"\n"
-  "  component: \"/example_chase/smoke.particlefx\"\n"
-  "  position {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "  }\n"
-  "  rotation {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "    w: 1.0\n"
-  "  }\n"
-  "  property_decls {\n"
-  "  }\n"
-  "}\n"
-  ""
+  children: "light_spot"
+  data: ""
   position {
     x: 0.0
     y: 0.0
@@ -247,49 +270,6 @@ embedded_instances {
     x: 1.0
     y: 1.0
     z: 1.0
-  }
-}
-embedded_instances {
-  id: "player_cam"
-  data: "embedded_components {\n"
-  "  id: \"camera\"\n"
-  "  type: \"camera\"\n"
-  "  data: \"aspect_ratio: 1.0\\n"
-  "fov: 0.7854\\n"
-  "near_z: 0.1\\n"
-  "far_z: 1000.0\\n"
-  "auto_aspect_ratio: 1\\n"
-  "orthographic_projection: 0\\n"
-  "orthographic_zoom: 1.0\\n"
-  "\"\n"
-  "  position {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "  }\n"
-  "  rotation {\n"
-  "    x: 0.0\n"
-  "    y: 0.0\n"
-  "    z: 0.0\n"
-  "    w: 1.0\n"
-  "  }\n"
-  "}\n"
-  ""
-  position {
-    x: 0.0
-    y: 400.0
-    z: 17.0
-  }
-  rotation {
-    x: -4.3297803E-17
-    y: 0.70710677
-    z: 0.70710677
-    w: 4.3297803E-17
-  }
-  scale3 {
-    x: 0.1
-    y: 0.1
-    z: 0.1
   }
 }
 embedded_instances {
@@ -448,5 +428,70 @@ embedded_instances {
     x: 11.0
     y: 11.0
     z: 11.0
+  }
+}
+embedded_instances {
+  id: "go"
+  data: "embedded_components {\n"
+  "  id: \"model\"\n"
+  "  type: \"model\"\n"
+  "  data: \"mesh: \\\"/builtins/assets/meshes/quad.dae\\\"\\n"
+  "skeleton: \\\"\\\"\\n"
+  "animations: \\\"\\\"\\n"
+  "default_animation: \\\"\\\"\\n"
+  "name: \\\"{{NAME}}\\\"\\n"
+  "materials {\\n"
+  "  name: \\\"default\\\"\\n"
+  "  material: \\\"/illumination/materials/model_ground.material\\\"\\n"
+  "  textures {\\n"
+  "    sampler: \\\"DIFFUSE_TEXTURE\\\"\\n"
+  "    texture: \\\"/assets/images/space/Space_Stars1.png\\\"\\n"
+  "  }\\n"
+  "  textures {\\n"
+  "    sampler: \\\"DATA_TEXTURE\\\"\\n"
+  "    texture: \\\"/illumination/textures/data.png\\\"\\n"
+  "  }\\n"
+  "  textures {\\n"
+  "    sampler: \\\"LIGHT_TEXTURE\\\"\\n"
+  "    texture: \\\"/illumination/textures/empty.png\\\"\\n"
+  "  }\\n"
+  "  textures {\\n"
+  "    sampler: \\\"NORMAL_TEXTURE\\\"\\n"
+  "    texture: \\\"/illumination/textures/empty.png\\\"\\n"
+  "  }\\n"
+  "  textures {\\n"
+  "    sampler: \\\"SPECULAR_TEXTURE\\\"\\n"
+  "    texture: \\\"/illumination/textures/white.png\\\"\\n"
+  "  }\\n"
+  "}\\n"
+  "\"\n"
+  "  position {\n"
+  "    x: 0.0\n"
+  "    y: 0.0\n"
+  "    z: 0.0\n"
+  "  }\n"
+  "  rotation {\n"
+  "    x: 0.0\n"
+  "    y: 0.0\n"
+  "    z: 0.0\n"
+  "    w: 1.0\n"
+  "  }\n"
+  "}\n"
+  ""
+  position {
+    x: 0.0
+    y: -3.0
+    z: 0.0
+  }
+  rotation {
+    x: -0.70710677
+    y: 0.0
+    z: 0.0
+    w: 0.70710677
+  }
+  scale3 {
+    x: 1000.0
+    y: 1000.0
+    z: 1000.0
   }
 }

@@ -1,5 +1,6 @@
 name: "illumination-model"
 tags: "model"
+tags: "particletrail"
 vertex_program: "/illumination/materials/model.vp"
 fragment_program: "/illumination/materials/model.fp"
 vertex_space: VERTEX_SPACE_LOCAL

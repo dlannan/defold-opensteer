@@ -1,28 +1,41 @@
 embedded_components {
-  id: "sprite"
-  type: "sprite"
-  data: "default_animation: \"cars_police01\"\n"
-  "material: \"/builtins/materials/sprite.material\"\n"
-  "blend_mode: BLEND_MODE_ALPHA\n"
-  "textures {\n"
-  "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/assets/cars.atlas\"\n"
+  id: "model"
+  type: "model"
+  data: "mesh: \"/assets/models/Spaceship01.gltf\"\n"
+  "skeleton: \"\"\n"
+  "animations: \"\"\n"
+  "default_animation: \"\"\n"
+  "name: \"{{NAME}}\"\n"
+  "materials {\n"
+  "  name: \"palette\"\n"
+  "  material: \"/illumination/materials/model.material\"\n"
+  "  textures {\n"
+  "    sampler: \"DIFFUSE_TEXTURE\"\n"
+  "    texture: \"/assets/models/textures/InfraredFurtive.png\"\n"
+  "  }\n"
+  "  textures {\n"
+  "    sampler: \"NORMAL_TEXTURE\"\n"
+  "    texture: \"/illumination/textures/empty.png\"\n"
+  "  }\n"
+  "  textures {\n"
+  "    sampler: \"LIGHT_TEXTURE\"\n"
+  "    texture: \"/illumination/textures/empty.png\"\n"
+  "  }\n"
+  "  textures {\n"
+  "    sampler: \"DATA_TEXTURE\"\n"
+  "    texture: \"/illumination/textures/data.png\"\n"
+  "  }\n"
   "}\n"
   ""
   position {
     x: 0.0
-    y: 0.1
+    y: 0.0
     z: 0.0
   }
   rotation {
-    x: 0.70710677
+    x: 0.0
     y: 0.0
     z: 0.0
-    w: 0.70710677
-  }
-  scale {
-    x: 0.1
-    y: 0.1
-    z: 0.1
+    w: 1.0
   }
 }
