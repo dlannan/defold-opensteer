@@ -21,13 +21,13 @@ function on_message(self, message_id, message, sender)
 	-- Learn more: https://defold.com/manuals/message-passing/
 	-- Remove this function if not needed
 
-	if(message.id == "wild") then 
-		local wild_txt = gui.get_node("wild")
-		gui.set_text(wild_txt, "WILD: "..message.score)
+	if(message.id == "blue") then 
+		local wild_txt = gui.get_node("blue")
+		gui.set_text(wild_txt, "BLUE: "..message.score)
 	end 
-	if(message.id == "farm") then 
-		local farm_txt = gui.get_node("farm")
-		gui.set_text(farm_txt, "FARM: "..message.score)            
+	if(message.id == "red") then 
+		local farm_txt = gui.get_node("red")
+		gui.set_text(farm_txt, "RED: "..message.score)            
 	end
 end
 

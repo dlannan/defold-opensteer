@@ -91,7 +91,7 @@ soccerGame.m_blueScore     = 0
 
 soccerGame.centerx         = 0
 soccerGame.centery         = 0
-soccerGame.scale           = 1
+soccerGame.scale           = 1.0
 
 soccerGame.playerPosition = {
     osvec.Vec3Set(0,0,4),
@@ -193,12 +193,12 @@ local Ball = function(bbox)
         if(soccerGame.m_TeamAGoal.InsideZ(soccerGame.m_Ball.mover.position()) and soccerGame.m_TeamAGoal.InsideX(soccerGame.m_Ball.mover.position())) then
             soccerGame.m_Ball.reset()	-- // Ball in blue teams goal, red scores
             soccerGame.m_blueScore = soccerGame.m_blueScore + 1
-            msg.post("/hud", "score", { id = "wild", score = soccerGame.m_blueScore })
+            msg.post("/hud", "score", { id = "blue", score = soccerGame.m_blueScore })
         end
         if(soccerGame.m_TeamBGoal.InsideZ(soccerGame.m_Ball.mover.position()) and soccerGame.m_TeamBGoal.InsideX(soccerGame.m_Ball.mover.position())) then
             soccerGame.m_Ball.reset()	-- // Ball in red teams goal, blue scores
             soccerGame.m_redScore = soccerGame.m_redScore + 1
-            msg.post("/hud", "score", { id = "farm", score = soccerGame.m_redScore })
+            msg.post("/hud", "score", { id = "red", score = soccerGame.m_redScore })
         end
 
         self.distance = self.distance + osvec.Vec3_distance( self.lastpos, self.mover.position() )
@@ -321,7 +321,7 @@ local function soccerScreen(gwidth, gheight)
 
     soccerGame.centerx     = gwidth * 0.5 
     soccerGame.centery     = gheight * 0.5 
-    soccerGame.scale       = gheight / 100.0  
+    soccerGame.scale       = 2.9 * gheight / 100.0
 --    print(gwidth, gheight)
 end
 
@@ -340,7 +340,7 @@ local function soccerSetup()
 
     -- // Build team A
 
-    local s = vmath.vector3(0.4, 0.4, 1.0)
+    local s = vmath.vector3(0.4, 0.4, 1.0) 
     go.set_scale(s, "ball")
         
     for i = 1, soccerGame.m_PlayerCountA do
@@ -348,7 +348,7 @@ local function soccerSetup()
         soccerGame.selectedVehicle = pMicTest
         tinsert(soccerGame.TeamA, pMicTest)
         tinsert(soccerGame.m_AllPlayers, pMicTest)
-        local s = vmath.vector3(0.2, 0.2, 1.0)
+        local s = vmath.vector3(0.8, 0.8, 4.0)
         go.set_scale(s, "player"..i)
     end
     -- // Build Team B
@@ -357,7 +357,7 @@ local function soccerSetup()
         soccerGame.selectedVehicle = pMicTest
         tinsert(soccerGame.TeamB,pMicTest)
         tinsert(soccerGame.m_AllPlayers,pMicTest)
-        local s = vmath.vector3(0.2, 0.2, 1.0)
+        local s = vmath.vector3(0.8, 0.8, 4.0)
         go.set_scale(s, "player"..i+9)
     end
     -- // initialize camera
@@ -408,24 +408,41 @@ local function soccerUpdater( dt )
     soccerGame.currentTime = soccerGame.currentTime + dt 
     soccerGame.elapsedTime = dt
 
-    local offset     = vmath.vector3(soccerGame.centerx, soccerGame.centery, 0)
-
+    local pos = soccerGame.m_Ball.mover._lastPosition
+    local soccrey = soccerGame.centery - pos.z * soccerGame.scale
+    local offset     = vmath.vector3(soccerGame.centerx, soccrey, 0)
+    
     -- // update simulation of test vehicle
     for k,v in pairs(soccerGame.TeamA) do
         v.update (soccerGame.currentTime, soccerGame.elapsedTime)
         local pos = v.mover._lastPosition
         go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "player"..k)
+
+        local fwd =v.mover.forward()
+        local angle = math.atan2(fwd.z, fwd.x)
+        local rot = vmath.quat_rotation_z( angle )
+        local newrot = vmath.slerp(dt * 5.0, go.get_rotation( "player"..k), rot )
+        go.set_rotation( newrot,  "player"..k)          
     end 
     for k,v in pairs(soccerGame.TeamB) do 
         v.update (soccerGame.currentTime, soccerGame.elapsedTime)
         local pos = v.mover._lastPosition
         go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "player"..k+9)
+
+        local fwd =v.mover.forward()
+        local angle = math.atan2(fwd.z, fwd.x)
+        local rot = vmath.quat_rotation_z( angle )
+        local newrot = vmath.slerp(dt * 5.0, go.get_rotation( "player"..k+9), rot )
+        go.set_rotation( newrot,  "player"..k+9)        
     end 
     if(soccerGame.m_Ball) then 
         soccerGame.m_Ball.update(soccerGame.currentTime, soccerGame.elapsedTime) 
         local pos = soccerGame.m_Ball.mover._lastPosition
         go.set_position(vmath.vector3(pos.x, pos.z, pos.y) * soccerGame.scale + offset, "ball")
-    end
+
+        local campos = go.get_world_position("/camera")
+        go.set_position(vmath.vector3(campos.x, pos.z * soccerGame.scale, campos.z), "/camera")
+    end    
 end
 
 -- // ----------------------------------------------------------------------------
