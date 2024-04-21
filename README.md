@@ -29,6 +29,7 @@ This project is distributed under the MIT license as OpenSteer is.
 
 ### Soccer Demo assets
 The included assets from from Kenneys Games Assets
+
 Sports Pack: https://kenney.nl/assets/sports-pack   License CCO 1.0
 
 ### Pedestrian Demo assets
@@ -39,16 +40,22 @@ Male Walking: https://skfb.ly/o7SrW   License: Free Standard
 Female Walking: https://skfb.ly/o7Srw   License: Free Standard
 
 Please credit the Author for this work if you use it, and make sure you follow licensing guidelines from Sketchfab.
+
 Author: Denys Almaral
+
 https://sketchfab.com/denysalmaral
 
 I highly recommend his work. They were very easy to use directly from sketfab in gltf format into Defold. Thanks!
 
 ### Chase Demo assets
 
-Space stars backgrounds: https://piiixl.itch.io/space    License: Free (for commercial as well - recommend attribution!)
+Space stars backgrounds: https://piiixl.itch.io/space    
 
-Space Ships (voxel): https://maxparata.itch.io/voxel-spaceships    License: Free (for commercial as well - recommend attribution!)
+License: Free (for commercial as well - recommend attribution!)
+
+Space Ships (voxel): https://maxparata.itch.io/voxel-spaceships    
+
+License: Free (for commercial as well - recommend attribution!)
 
 Both the background assets and the spaceships are excellent. Highly recommend giving some attribution if you use them.
 

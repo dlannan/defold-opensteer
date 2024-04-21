@@ -57,12 +57,12 @@ instances {
     }
     properties {
       id: "smoothness"
-      value: "0.001"
+      value: "0.1"
       type: PROPERTY_TYPE_NUMBER
     }
     properties {
       id: "cutoff"
-      value: "0.3"
+      value: "0.5"
       type: PROPERTY_TYPE_NUMBER
     }
   }
@@ -141,6 +141,49 @@ instances {
     properties {
       id: "fog_level"
       value: "0.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+instances {
+  id: "light_spot1"
+  prototype: "/illumination/light_spot.go"
+  position {
+    x: 0.0
+    y: 50.0
+    z: 0.0
+  }
+  rotation {
+    x: -0.70710677
+    y: 0.0
+    z: 0.0
+    w: 0.70710677
+  }
+  component_properties {
+    id: "light"
+    properties {
+      id: "radius"
+      value: "100.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "specular"
+      value: "0.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "smoothness"
+      value: "0.2"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
+      id: "cutoff"
+      value: "0.8"
       type: PROPERTY_TYPE_NUMBER
     }
   }
@@ -254,6 +297,7 @@ embedded_instances {
   id: "player"
   children: "car_player"
   children: "light_spot"
+  children: "light_spot1"
   data: ""
   position {
     x: 0.0
