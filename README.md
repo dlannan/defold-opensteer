@@ -22,7 +22,7 @@ a number of capabilities in simulations and games. Some of these are:
 - Character control and behavior
 - Vehicle traffic control and behavior
 - Group management in large scale (LQDB specifically)
-- Phywics systems that need coarse initial collision checks
+- Phyics systems that need coarse initial collision checks (like broadphase collision)
 
 ## Licenses
 This project is distributed under the MIT license as OpenSteer is. 
